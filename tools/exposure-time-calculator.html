@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exposure Time Calculator — Dial In Your Screen with a Step Wedge</title>
+<style>
+:root{
+  --paper:#faf8f4; --paper-2:#f3f0e9; --card:#ffffff;
+  --ink:#1c1a16; --ink-3:#5c574e; --line:#e3ded3;
+  --accent:#c22a45; --c:#0090c0; --m:#d6336c; --y:#e8a900; --k:#1c1a16;
+  --good:#2b8a3e; --warn:#b87300;
+  --sans:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);line-height:1.55}
+.cmyk{display:flex;height:4px}.cmyk span{flex:1}
+.cmyk .c{background:var(--c)}.cmyk .m{background:var(--m)}.cmyk .y{background:var(--y)}.cmyk .k{background:var(--k)}
+.wrap{max-width:900px;margin:0 auto;padding:0 16px 60px}
+header.top{border-bottom:1px solid var(--line);padding:16px 0 14px;margin-bottom:18px}
+h1{font-family:var(--sans);font-size:1.5rem;margin:0 0 4px}
+.sub{color:var(--ink-3);font-size:.9rem;margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px}
+.card h2{font-family:var(--sans);font-size:.8rem;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);margin:0 0 12px}
+label.lab{font-family:var(--sans);font-size:.82rem;color:var(--ink-3);display:block;margin:12px 0 4px}
+input,select{font-family:var(--sans);font-size:.95rem;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+.row{display:flex;gap:14px;flex-wrap:wrap}
+.row>div{flex:1;min-width:180px}
+button{font-family:var(--sans);cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:9px 16px;font-size:.88rem}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{background:#a82339;color:#fff}
+.hint{font-size:.8rem;color:var(--ink-3);margin-top:4px}
+/* result */
+.result{background:#fdf9ef;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:16px 20px;margin-top:14px;display:none}
+.result.show{display:block}
+.result .big{font-family:var(--sans);font-size:2rem;font-weight:700;line-height:1.1}
+.result .big small{font-size:1rem;font-weight:400;color:var(--ink-3)}
+.result .dir{font-family:var(--sans);font-size:.85rem;margin-top:2px}
+.result .dir.cut{color:var(--accent)}.result .dir.add{color:var(--good)}
+.result .math{font-family:var(--sans);font-size:.9rem;color:var(--ink-3);margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
+.result .math code{background:var(--paper-2);padding:1px 6px;border-radius:4px;font-size:.85rem}
+.warntext{font-family:var(--sans);font-size:.85rem;color:var(--warn);margin-top:10px}
+.locktext{font-family:var(--sans);font-size:.9rem;color:var(--good);font-weight:600;margin-top:10px}
+/* wedge visual */
+.wedge{margin-top:14px}
+.wedge .cells{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.wedge .cell{flex:1;height:34px;position:relative}
+.wedge .marks{display:flex;font-family:var(--sans);font-size:.68rem;color:var(--ink-3);margin-top:3px}
+.wedge .marks span{flex:1;text-align:center}
+.wedge .marks span.tgt{color:var(--good);font-weight:700}
+.wedge .marks span.rd{color:var(--accent);font-weight:700}
+/* log */
+table.log{width:100%;border-collapse:collapse;font-family:var(--sans);font-size:.85rem}
+table.log th{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);background:var(--paper-2);border:1px solid var(--line);padding:6px 8px;text-align:left}
+table.log td{border:1px solid var(--line);padding:6px 8px}
+table.log tr.locked td{background:#eef7ef}
+.pill{font-size:.7rem;padding:1px 8px;border-radius:20px;border:1px solid var(--good);color:var(--good)}
+.logacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.note{font-size:.8rem;color:var(--ink-3)}
+textarea#import{width:100%;min-height:90px;font-family:monospace;font-size:.78rem;border:1px solid var(--line);border-radius:8px;padding:8px;margin-top:8px}
+footer{border-top:1px solid var(--line);margin-top:26px;padding-top:14px;font-size:.8rem;color:var(--ink-3)}
+footer a{color:var(--accent)}
+@media(max-width:560px){ .result .big{font-size:1.6rem} }
+</style>
+</head>
+<body>
+<div class="cmyk"><span class="c"></span><span class="m"></span><span class="y"></span><span class="k"></span></div>
+<div class="wrap">
+<header class="top">
+  <h1>Exposure Time Calculator</h1>
+  <p class="sub">Run one test exposure, read your calculator, get the corrected time. Works with step-counting wedges (Stouffer, SAATI, Ryonet) and factor-readout filters (KIWO/Ulano ExpoCheck, Chromaline Dual, SAATI Exposure Calculator).</p>
+</header>
+
+<!-- 1. method + tool -->
+<div class="card">
+  <h2>1 · Your exposure calculator</h2>
+  <label class="lab" for="method">Type of calculator</label>
+  <select id="method" style="width:100%">
+    <option value="step" selected>Step-counting wedge — count the last fully-cured step (Stouffer, SAATI 21-Step, Ryonet)</option>
+    <option value="factor">Factor / neutral-density filter — read a factor off the best area (KIWO/Ulano ExpoCheck, Chromaline Dual, SAATI Exposure Calculator)</option>
+  </select>
+
+  <div id="stepcfg">
+    <div class="row">
+      <div>
+        <label class="lab" for="std">Wedge</label>
+        <select id="std" style="width:100%">
+          <option value="t2115" selected>Stouffer T2115 — 21 steps, 0.15 density/step (×1.41)</option>
+          <option value="saati21">SAATI 21-Step Sensitivity Guide — same 0.15 convention</option>
+          <option value="ryonet21">Ryonet 21-Step Guide — same 0.15 convention</option>
+          <option value="t3110">Stouffer T3110 — 31 steps, 0.10 density/step (×1.26)</option>
+          <option value="t4105">Stouffer T4105 — 41 steps, 0.05 density/step (×1.12)</option>
+          <option value="t4110">Stouffer T4110 — 41 steps, 0.10 density/step (×1.26)</option>
+          <option value="custom">Custom / other wedge…</option>
+        </select>
+      </div>
+      <div>
+        <label class="lab" for="target">Target step (last fully-cured step you want)</label>
+        <input type="number" id="target" value="7" min="1" max="99" step="1" style="width:6rem">
+        <p class="hint" id="targethint">7 solid steps is the standard convention (SAATI suggests 6 for CtS exposure units). Adjust to your emulsion.</p>
+      </div>
+    </div>
+    <div id="custombox" style="display:none">
+      <div class="row">
+        <div>
+          <label class="lab" for="csteps">Number of steps</label>
+          <input type="number" id="csteps" value="21" min="2" max="99" step="1" style="width:6rem">
+        </div>
+        <div>
+          <label class="lab" for="cdens">Density increment per step</label>
+          <input type="number" id="cdens" value="0.15" min="0.01" max="0.5" step="0.01" style="width:7rem">
+          <p class="hint">Dose factor per step = 10^increment. 0.15 → ×1.41, 0.10 → ×1.26, 0.05 → ×1.12.</p>
+        </div>
+      </div>
+    </div>
+    <p class="hint" id="stdinfo" style="margin-top:12px"></p>
+  </div>
+
+  <div id="factorcfg" style="display:none">
+    <div class="row">
+      <div>
+        <label class="lab" for="fstd">Calculator</label>
+        <select id="fstd" style="width:100%">
+          <option value="expocheck" selected>KIWO / Ulano ExpoCheck — factors 1.0, 0.9 … 0.1</option>
+          <option value="chromaline">Chromaline Dual — read the number between the best pair (0.33, 0.50, interpolate)</option>
+          <option value="saaticalc">SAATI Exposure Calculator — columns 100 / 70 / 50 / 33 / 25%</option>
+          <option value="fcustom">Custom factor set…</option>
+        </select>
+      </div>
+      <div>
+        <label class="lab" for="fcustomlist">Custom factors (comma-separated)</label>
+        <input type="text" id="fcustomlist" value="1.0, 0.7, 0.5, 0.33, 0.25" disabled style="width:100%">
+        <p class="hint">These tools are used at <strong>twice</strong> your estimated time as the test exposure.</p>
+      </div>
+    </div>
+    <p class="hint" id="fstdinfo" style="margin-top:12px"></p>
+  </div>
+</div>
+
+<!-- 2. this round -->
+<div class="card">
+  <h2>2 · This round</h2>
+
+  <div id="roundstep">
+    <div class="row">
+      <div>
+        <label class="lab" for="time">Exposure time you just used (seconds)</label>
+        <input type="number" id="time" value="120" min="0.1" step="0.1" style="width:8rem">
+      </div>
+      <div>
+        <label class="lab" for="readmode">What did the wedge show after washout?</label>
+        <select id="readmode" style="width:100%">
+          <option value="step" selected>I can read a step number</option>
+          <option value="none">Nothing fully solid — even step 1 washes out</option>
+          <option value="all">Every step is solid — can't tell where it ends</option>
+        </select>
+      </div>
+      <div id="stepwrap">
+        <label class="lab" for="step">Last fully-cured step</label>
+        <input type="number" id="step" value="9" min="1" max="99" step="1" style="width:6rem">
+      </div>
+    </div>
+  </div>
+
+  <div id="roundfactor" style="display:none">
+    <div class="row">
+      <div>
+        <label class="lab" for="ftime">Test exposure time (seconds) — usually 2× your estimate</label>
+        <input type="number" id="ftime" value="240" min="0.1" step="0.1" style="width:8rem">
+      </div>
+      <div>
+        <label class="lab" for="ffactor">Factor on the best-looking area</label>
+        <select id="ffactor" style="width:9rem"></select>
+        <p class="hint" id="ffactorhint"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="result show" id="result"></div>
+
+  <div class="logacts">
+    <button class="primary" id="logbtn">Log this round → start next round</button>
+  </div>
+</div>
+
+<!-- 3. log -->
+<div class="card">
+  <h2>3 · Session log</h2>
+  <div id="logwrap"><p class="note">No rounds logged yet. Each round you log fills in the next round's time automatically.</p></div>
+  <div class="logacts">
+    <button id="export">Export JSON backup</button>
+    <button id="importbtn">Import JSON</button>
+    <button id="clear" class="danger" style="color:var(--accent);border-color:var(--accent)">Clear log</button>
+  </div>
+  <div id="importbox" style="display:none">
+    <textarea id="import" placeholder="Paste a previously exported JSON here, then click Load."></textarea>
+    <div class="logacts"><button class="primary" id="load">Load</button></div>
+  </div>
+  <p class="note" style="margin-top:10px">Rounds are stored in this browser only (localStorage). Clearing site data wipes them — export a backup if the session matters.</p>
+</div>
+
+<footer>
+  <p><strong>The math — step wedges:</strong> each step adds a fixed optical density, so dose scales by a constant factor per step (10^density-increment — ×1.41 for 0.15). New time = old time × factor^(target − step you read). <strong>Factor filters:</strong> correct time = test time × factor of the best area. Both assume the same emulsion, mesh, lamp and distance between rounds — change any of those and run a fresh test. Very long or very short exposures can drift from the pure math (reciprocity failure), so always confirm with one more test.</p>
+  <p>Sources: <a href="https://www.stouffer.net/using21step.htm" rel="noopener">Stouffer — Using the 21-Step Guide</a> · <a href="https://www.saati.com/media/cqej02ri/21_step_tds_2024.pdf" rel="noopener">SAATI 21-Step Calculator TDS</a> · <a href="https://chromaline.com/how-to-use-a-dual-exposure-calculator-for-screen-making/" rel="noopener">Chromaline — Dual Exposure Calculator instructions</a> · <a href="https://ulano.squarespace.com/s/ULANO_ExpoCheck.pdf" rel="noopener">Ulano/KIWO ExpoCheck instructions</a></p>
+  <p><button id="dl">Download this tool as a standalone HTML file</button></p>
+</footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var KEY = 'spf-exposure-calc-v1';
+  function $(id) { return document.getElementById(id); }
+
+  var STDS = {
+    t2115:   { name: 'Stouffer T2115', steps: 21, dens: 0.15, target: 7 },
+    saati21: { name: 'SAATI 21-Step', steps: 21, dens: 0.15, target: 7 },
+    ryonet21:{ name: 'Ryonet 21-Step', steps: 21, dens: 0.15, target: 7 },
+    t3110:   { name: 'Stouffer T3110', steps: 31, dens: 0.10, target: 10 },
+    t4105:   { name: 'Stouffer T4105', steps: 41, dens: 0.05, target: 21 },
+    t4110:   { name: 'Stouffer T4110', steps: 41, dens: 0.10, target: 10 }
+  };
+  var FSTDS = {
+    expocheck: { name: 'KIWO/Ulano ExpoCheck', factors: [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1],
+      note: 'Expose at 2× your estimate. Pick the darkest area that is fully cured with good resolution. If the best area is at either extreme (1.0 or 0.1), retest at the computed time.' },
+    chromaline: { name: 'Chromaline Dual', factors: [1.0, 0.7, 0.5, 0.4, 0.33, 0.25],
+      note: 'Expose at 2× your estimate. Read the number between the sharpest pair of line targets; interpolate (e.g. 0.40) if the truth sits between two targets. All washed away → double the test time and start over.' },
+    saaticalc: { name: 'SAATI Exposure Calculator', factors: [1.0, 0.7, 0.5, 0.33, 0.25],
+      note: 'Columns show 100 / 70 / 50 / 33 / 25% of the test time. Compare columns and pick the one that matches your resolution and cure needs.' },
+    fcustom: { name: 'Custom', factors: null, note: 'Your own factor set.' }
+  };
+
+  /* ---------- state ---------- */
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || { rounds: [] }; }
+    catch (e) { return { rounds: [] }; }
+  }
+  function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+  var state = load();
+
+  /* ---------- config ---------- */
+  function method() { return $('method').value; }
+  function cfg() {
+    var v = $('std').value;
+    if (v === 'custom') {
+      return {
+        name: 'Custom wedge',
+        steps: Math.max(2, parseInt($('csteps').value, 10) || 21),
+        dens: Math.min(0.5, Math.max(0.01, parseFloat($('cdens').value) || 0.15))
+      };
+    }
+    return STDS[v];
+  }
+  function factor() { return Math.pow(10, cfg().dens); }
+  function target() {
+    var t = parseInt($('target').value, 10);
+    return (t >= 1 && t <= 99) ? t : 7;
+  }
+  function fcfg() { return FSTDS[$('fstd').value]; }
+  function factorList() {
+    var c = fcfg();
+    if (c.factors) return c.factors;
+    var out = [];
+    $('fcustomlist').value.split(',').forEach(function (x) {
+      var f = parseFloat(x);
+      if (f > 0 && f <= 2 && out.indexOf(f) < 0) out.push(f);
+    });
+    return out.length ? out.sort(function (a, b) { return b - a; }) : [1.0, 0.5];
+  }
+
+  /* ---------- formatting ---------- */
+  function fmtTime(s) {
+    if (s < 60) return (Math.round(s * 10) / 10) + ' s';
+    var m = Math.floor(s / 60), sec = Math.round(s - m * 60);
+    if (sec === 60) { m++; sec = 0; }
+    return m + ':' + ('0' + sec).slice(-2) + ' (' + Math.round(s) + ' s)';
+  }
+  function round1(x) { return Math.round(x * 10) / 10; }
+
+  /* ---------- render config panels ---------- */
+  function renderStd() {
+    var isStep = method() === 'step';
+    $('stepcfg').style.display = isStep ? 'block' : 'none';
+    $('factorcfg').style.display = isStep ? 'none' : 'block';
+    $('roundstep').style.display = isStep ? 'block' : 'none';
+    $('roundfactor').style.display = isStep ? 'none' : 'block';
+    if (isStep) {
+      var c = cfg(), f = factor();
+      $('custombox').style.display = ($('std').value === 'custom') ? 'block' : 'none';
+      $('stdinfo').innerHTML = 'Per-step dose factor <strong>×' + f.toFixed(2) + '</strong> · ' +
+        c.steps + ' steps · target density ≈ ' + (target() * c.dens).toFixed(2) +
+        (cfg().name === 'SAATI 21-Step' ? ' · using CtS? SAATI suggests aiming for 6' : '');
+    } else {
+      var fc = fcfg();
+      $('fcustomlist').disabled = !!fc.factors;
+      $('fstdinfo').textContent = fc.note;
+      var sel = $('ffactor'), cur = parseFloat(sel.value);
+      sel.innerHTML = '';
+      factorList().forEach(function (f) {
+        var o = document.createElement('option');
+        o.value = f; o.textContent = '× ' + f;
+        sel.appendChild(o);
+      });
+      if (factorList().indexOf(cur) >= 0) sel.value = cur;
+      $('ffactorhint').textContent = 'Correct time = test time × factor.';
+    }
+  }
+
+  /* ---------- wedge visual ---------- */
+  function renderWedge(readStep) {
+    var c = cfg(), t = target();
+    var n = Math.min(c.steps, 41);
+    var html = '<div class="cells">';
+    for (var i = 1; i <= n; i++) {
+      var shade = Math.round(255 - (i / n) * 215);
+      html += '<div class="cell" style="background:rgb(' + shade + ',' + shade + ',' + shade + ')"></div>';
+    }
+    html += '</div><div class="marks">';
+    for (var j = 1; j <= n; j++) {
+      var cls = '', txt = '';
+      if (j === t) { cls = 'tgt'; txt = '▲' + j; }
+      if (readStep && j === readStep && j <= n) { cls = 'rd'; txt = '▼' + j; }
+      if (!txt && (j === 1 || j === n)) txt = j;
+      html += '<span class="' + cls + '">' + txt + '</span>';
+    }
+    html += '</div>';
+    return '<div class="wedge">' + html + '</div>';
+  }
+
+  /* ---------- step-mode calculation ---------- */
+  function calcStep() {
+    var t = parseFloat($('time').value);
+    if (!(t > 0)) return null;
+    var mode = $('readmode').value;
+    var f = factor(), tgt = target();
+
+    if (mode === 'none') {
+      return {
+        kind: 'none', suggest: t * 2,
+        html: '<p class="big">' + fmtTime(t * 2) + ' <small>— double it and retest</small></p>' +
+          '<p class="dir add">Severely under-exposed: even step 1 didn\'t hold.</p>' +
+          '<p class="math">Doubling adds about 2 steps on a 0.15 wedge (' + f.toFixed(2) + '² ≈ ' + (f * f).toFixed(2) + '× dose). ' +
+          'If ' + fmtTime(t * 2) + ' still shows nothing solid, double again — don\'t crawl up in small steps.</p>'
+      };
+    }
+    if (mode === 'all') {
+      return {
+        kind: 'all', suggest: t / 2,
+        html: '<p class="big">' + fmtTime(t / 2) + ' <small>— halve it and retest</small></p>' +
+          '<p class="dir cut">Over-exposed past the scale: every step is solid, so the wedge can\'t tell you by how much.</p>' +
+          '<p class="math">Halving removes about 2 steps on a 0.15 wedge. If ' + fmtTime(t / 2) + ' is still all solid, halve again.</p>'
+      };
+    }
+
+    var s = parseInt($('step').value, 10);
+    if (!(s >= 1)) return null;
+    var off = s - tgt;
+    var next = t * Math.pow(f, tgt - s);
+    var mult = Math.pow(f, tgt - s);
+    var dir, cls;
+    if (off > 0) { dir = 'Over by ' + off + ' step' + (off > 1 ? 's' : '') + ' → cut the time.'; cls = 'cut'; }
+    else if (off < 0) { dir = 'Under by ' + (-off) + ' step' + (off < -1 ? 's' : '') + ' → add time.'; cls = 'add'; }
+
+    var html;
+    if (off === 0) {
+      html = '<p class="big">' + fmtTime(t) + ' <small>— locked in</small></p>' +
+        '<p class="locktext">✓ Step ' + s + ' is your target. This time is your exposure for this emulsion / mesh / lamp setup.</p>' +
+        '<p class="math">Write it down, and re-test when you change emulsion, mesh, coating, lamp or distance.</p>';
+    } else {
+      html = '<p class="big">' + fmtTime(next) + '</p>' +
+        '<p class="dir ' + cls + '">' + dir + '</p>' +
+        '<p class="math">new time = old time × factor<sup>(target − read)</sup><br>' +
+        '<code>' + round1(t) + ' × ' + f.toFixed(2) + '<sup>(' + tgt + ' − ' + s + ')</sup> = ' +
+        round1(t) + ' × ' + mult.toFixed(2) + ' = ' + round1(next) + ' s</code></p>';
+      if (Math.abs(off) >= 4) {
+        html += '<p class="warntext">⚠ You\'re ' + Math.abs(off) + ' steps off — extrapolation this far leans hard on the math. ' +
+          'Run the suggested time as a fresh test rather than trusting it blind.</p>';
+      } else {
+        html += '<p class="math">Confirm with one more test at ' + fmtTime(next) + ' before burning production screens.</p>';
+      }
+    }
+    html += renderWedge(s);
+    return { kind: 'step', read: s, off: off, suggest: next, html: html };
+  }
+
+  /* ---------- factor-mode calculation ---------- */
+  function calcFactor() {
+    var t = parseFloat($('ftime').value);
+    var fc = parseFloat($('ffactor').value);
+    if (!(t > 0) || !(fc > 0)) return null;
+    var correct = t * fc;
+    var list = factorList();
+    var atMax = (fc === list[0]), atMin = (fc === list[list.length - 1]);
+
+    var html = '<p class="big">' + fmtTime(correct) + '</p>' +
+      '<p class="math">correct time = test time × factor<br>' +
+      '<code>' + round1(t) + ' × ' + fc + ' = ' + round1(correct) + ' s</code></p>';
+    if (atMax) {
+      html += '<p class="warntext">⚠ The best area is the unfiltered (×1.0) end — your test time may already be under-exposing everything. ' +
+        'Confirm at ' + fmtTime(correct) + '; if resolution still looks best at ×1.0, raise the test time and rerun.</p>';
+    } else if (atMin) {
+      html += '<p class="warntext">⚠ The best area is the darkest filter end — everything past it would be even less exposure, so you can\'t see if lower is better. ' +
+        'Run a new test at 2× ' + fmtTime(correct) + ' (' + fmtTime(correct * 2) + ') to bracket it.</p>';
+    } else {
+      html += '<p class="math">Confirm with one more test at ' + fmtTime(correct) + ' before burning production screens.</p>';
+    }
+    return { kind: 'factor', factor: fc, suggest: correct, html: html };
+  }
+
+  function calc() { return method() === 'step' ? calcStep() : calcFactor(); }
+
+  function render() {
+    renderStd();
+    var r = calc();
+    var box = $('result');
+    if (!r) { box.classList.remove('show'); box.innerHTML = ''; return; }
+    box.innerHTML = r.html;
+    box.classList.add('show');
+  }
+
+  /* ---------- log ---------- */
+  function renderLog() {
+    var w = $('logwrap');
+    if (!state.rounds.length) {
+      w.innerHTML = '<p class="note">No rounds logged yet. Each round you log fills in the next round\'s time automatically.</p>';
+      return;
+    }
+    var html = '<table class="log"><tr><th>#</th><th>Time used</th><th>Reading</th><th>→ Next time</th><th>When</th></tr>';
+    state.rounds.forEach(function (rd, i) {
+      var reading, next, locked = false;
+      if (rd.mode === 'factor') {
+        reading = 'factor ×' + rd.factor;
+        next = fmtTime(rd.next);
+      } else {
+        locked = rd.off === 0;
+        reading = 'step ' + rd.read + ' (' + (rd.off > 0 ? '+' + rd.off : rd.off) + ')';
+        next = rd.off === 0 ? '—' : fmtTime(rd.next);
+      }
+      html += '<tr class="' + (locked ? 'locked' : '') + '"><td>' + (i + 1) + '</td><td>' + fmtTime(rd.time) + '</td>' +
+        '<td>' + reading + (locked ? ' <span class="pill">locked in</span>' : '') + '</td>' +
+        '<td>' + next + '</td><td>' + new Date(rd.at).toLocaleString() + '</td></tr>';
+    });
+    html += '</table>';
+    w.innerHTML = html;
+  }
+
+  $('logbtn').addEventListener('click', function () {
+    var r = calc();
+    if (!r) { render(); return; }
+    if (method() === 'factor') {
+      if (r.kind !== 'factor') { render(); return; }
+      state.rounds.push({
+        mode: 'factor', time: parseFloat($('ftime').value), factor: r.factor,
+        next: r.suggest, std: fcfg().name, at: Date.now()
+      });
+      save(state);
+      $('ftime').value = round1(r.suggest);
+    } else {
+      if (r.kind !== 'step') { render(); return; }
+      state.rounds.push({
+        mode: 'step', time: parseFloat($('time').value), read: r.read, off: r.off,
+        next: r.suggest, std: cfg().name, target: target(), at: Date.now()
+      });
+      save(state);
+      if (r.off !== 0) $('time').value = round1(r.suggest);
+      $('readmode').value = 'step';
+    }
+    render(); renderLog();
+  });
+
+  $('export').addEventListener('click', function () {
+    var blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'exposure-calculator-log.json';
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+  });
+  $('importbtn').addEventListener('click', function () {
+    $('importbox').style.display = $('importbox').style.display === 'none' ? 'block' : 'none';
+  });
+  $('load').addEventListener('click', function () {
+    try {
+      var d = JSON.parse($('import').value);
+      if (!d || !Array.isArray(d.rounds)) throw new Error('bad');
+      state = d; save(state); renderLog();
+      $('import').value = ''; $('importbox').style.display = 'none';
+    } catch (e) { alert('That doesn\'t look like a valid backup file.'); }
+  });
+  $('clear').addEventListener('click', function () {
+    if (!state.rounds.length) return;
+    if (confirm('Delete all logged rounds? This cannot be undone.')) {
+      state = { rounds: [] }; save(state); renderLog();
+    }
+  });
+
+  $('dl').addEventListener('click', function () {
+    var blob = new Blob(['<!DOCTYPE html>\n' + document.documentElement.outerHTML], { type: 'text/html' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'exposure-time-calculator.html';
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+  });
+
+  /* ---------- wiring ---------- */
+  $('method').addEventListener('input', render);
+  $('std').addEventListener('input', function () {
+    var c = STDS[$('std').value];
+    if (c) $('target').value = c.target;
+    render();
+  });
+  $('fstd').addEventListener('input', render);
+  $('fcustomlist').addEventListener('input', render);
+  ['target', 'csteps', 'cdens', 'time', 'step', 'ftime'].forEach(function (id) {
+    $(id).addEventListener('input', render);
+  });
+  $('ffactor').addEventListener('input', render);
+  $('readmode').addEventListener('input', function () {
+    $('stepwrap').style.display = ($('readmode').value === 'step') ? 'block' : 'none';
+    render();
+  });
+
+  render(); renderLog();
+})();
+</script>
+</body>
+</html>
