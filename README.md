@@ -26,6 +26,8 @@ A browser-based inspection station for the end of your production line.
 - Audit log, CSV export, multiple inspectors with sign-in
 - [Run it](https://wittysune.github.io/screenprinting-tools/tools/print-qc-logger.html) · [About this tool](https://screenprintfoundry.com/tools/qc-logger/)
 
+![Print QC Logger — one-keystroke counting with live defect rate](assets/qc-logger.png)
+
 ### 3. Ink Recipe Manager
 A local database for your ink formulas.
 
@@ -35,6 +37,8 @@ A local database for your ink formulas.
 - Printable shop-floor mixing sheet
 - [Run it](https://wittysune.github.io/screenprinting-tools/tools/ink-recipe-manager.html) · [About this tool](https://screenprintfoundry.com/tools/ink-recipe-manager/)
 
+![Ink Recipe Manager — the ink library with formulas](assets/ink-recipe-manager.png)
+
 ### 4. 3-Axis Registration Adjustment Simulator
 A training simulator for three-axis presses (X / Y1 / Y2).
 
@@ -42,12 +46,16 @@ A training simulator for three-axis presses (X / Y1 / Y2).
 - Guided lessons, random challenges, step-by-step solutions, virtual handwheels
 - [Run it](https://wittysune.github.io/screenprinting-tools/tools/registration-simulator.html) · [Full guide with lesson walkthroughs](https://screenprintfoundry.com/tools/registration-simulator/)
 
+![3-Axis Registration Simulator — virtual handwheels and four registration marks](assets/registration-simulator.png)
+
 ### 5. Registration Mark Generator
 Build a custom film-positive template, download as SVG.
 
 - Corner registration marks, center crop marks, gradation strip, separation label, custom artwork boxes
 - Matched to your film size; SVG imports into Illustrator / CorelDRAW / Inkscape
 - [Run it](https://wittysune.github.io/screenprinting-tools/tools/registration-mark-generator.html) · [About this tool](https://screenprintfoundry.com/tools/registration-mark-generator/)
+
+![Registration Mark Generator — film template options](assets/registration-mark-generator.png)
 
 ## How these work
 
