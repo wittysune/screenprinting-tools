@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Screen Printing Tools — free, offline, single-file</title>
+<meta name="description" content="Free single-file HTML tools for screen printing shops: exposure time calculator, print QC logger, ink recipe manager. Run them right here, or download and use offline. No sign-up, your data never leaves your computer.">
+<style>
+:root{
+  --paper:#faf8f4; --paper-2:#f3f0e9; --card:#ffffff;
+  --ink:#1c1a16; --ink-3:#5c574e; --line:#e3ded3;
+  --accent:#c22a45; --c:#0090c0; --m:#d6336c; --y:#e8a900; --k:#1c1a16;
+  --sans:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);line-height:1.55}
+.cmyk{display:flex;height:4px}.cmyk span{flex:1}
+.cmyk .c{background:var(--c)}.cmyk .m{background:var(--m)}.cmyk .y{background:var(--y)}.cmyk .k{background:var(--k)}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px 60px}
+header{border-bottom:1px solid var(--line);padding:26px 0 18px;margin-bottom:20px}
+h1{font-family:var(--sans);font-size:1.6rem;margin:0 0 6px}
+.sub{color:var(--ink-3);font-size:.95rem;margin:0}
+.sub a{color:var(--accent)}
+h2{font-family:var(--sans);font-size:.8rem;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);margin:26px 0 10px}
+.tool{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.tool h3{font-family:var(--sans);font-size:1.05rem;margin:0 0 6px}
+.tool p{font-size:.88rem;margin:0 0 12px;color:var(--ink)}
+.links{display:flex;gap:10px;flex-wrap:wrap;font-family:var(--sans)}
+.links a{display:inline-block;border:1px solid var(--line);border-radius:8px;padding:7px 14px;font-size:.82rem;text-decoration:none;color:var(--ink)}
+.links a:hover{border-color:var(--accent);color:var(--accent)}
+.links a.run{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.links a.run:hover{background:#a82339;color:#fff}
+.tool img{width:100%;border:1px solid var(--line);border-radius:8px;margin:0 0 12px}
+footer{border-top:1px solid var(--line);margin-top:26px;padding-top:14px;font-size:.8rem;color:var(--ink-3)}
+footer a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="cmyk"><span class="c"></span><span class="m"></span><span class="y"></span><span class="k"></span></div>
+<div class="wrap">
+<header>
+  <h1>Screen Printing Tools</h1>
+  <p class="sub">Free, single-file HTML tools built by a working screen printing engineer. Each one runs entirely in your browser — <strong>nothing is uploaded, nothing needs installing</strong>. Use them right here, or download the file and double-click it on any computer, offline. More tools, full guides and production articles at <a href="https://screenprintfoundry.com/tools/">screenprintfoundry.com</a>.</p>
+</header>
+
+<h2>The tools</h2>
+
+<div class="tool">
+  <h3>Exposure Time Calculator</h3>
+  <img src="assets/01-step-result.png" alt="Exposure Time Calculator: 120 seconds exposed, step 9 read against target 7 — corrected to 60 seconds with the formula shown">
+  <p>Read your step-wedge or factor-filter test, get the corrected exposure time with the math shown. Presets for Stouffer T2115/T3110/T4105/T4110, SAATI 21-Step, Ryonet, KIWO/Ulano ExpoCheck, Chromaline Dual and SAATI Exposure Calculator — plus custom scales, off-the-scale guidance (double / halve retest), and a session log that tracks you round by round until you're locked in.</p>
+  <div class="links">
+    <a class="run" href="tools/exposure-time-calculator.html">▶ Run in your browser</a>
+    <a href="tools/exposure-time-calculator.html" download>⬇ Download .html</a>
+    <a href="https://screenprintfoundry.com/process/exposure-calculator-guide/">Full walkthrough →</a>
+    <a href="https://screenprintfoundry.com/process/find-your-exposure-time/">Step-wedge guide →</a>
+  </div>
+</div>
+
+<div class="tool">
+  <h3>Print QC Logger</h3>
+  <p>A browser-based inspection station: one-keystroke good/defect counting, live defect rate, defect Pareto, per-inspector statistics, editable defect types, audit log and CSV export. Built for the end of a production line — all records stay on the computer it runs on.</p>
+  <div class="links">
+    <a class="run" href="tools/print-qc-logger.html">▶ Run in your browser</a>
+    <a href="tools/print-qc-logger.html" download>⬇ Download .html</a>
+    <a href="https://screenprintfoundry.com/tools/qc-logger/">About this tool →</a>
+  </div>
+</div>
+
+<div class="tool">
+  <h3>Ink Recipe Manager</h3>
+  <p>A local database for your ink formulas: raw-material library, mixed-ink recipes, per-project print layers with screen photos, a weighing calculator, and a printable shop-floor mixing sheet. Your recipes are production secrets — they never leave your computer.</p>
+  <div class="links">
+    <a class="run" href="tools/ink-recipe-manager.html">▶ Run in your browser</a>
+    <a href="tools/ink-recipe-manager.html" download>⬇ Download .html</a>
+    <a href="https://screenprintfoundry.com/tools/ink-recipe-manager/">About this tool →</a>
+  </div>
+</div>
+
+<h2>How these work</h2>
+<p style="font-size:.88rem">Each tool is <strong>one .html file</strong> — no server, no account, no internet required. Data you enter is stored in your own browser's local storage on your own machine. Clearing browser site data wipes it, so use the built-in JSON backup for anything that matters. Every tool includes a "download standalone file" button, so you can take a copy to the shop floor and pass it around like any document.</p>
+
+<footer>
+  <p>Built by <a href="https://screenprintfoundry.com">ScreenPrint Foundry</a> — production-grade screen printing knowledge: process guides, mesh and exposure calculators, and shop-floor tools. Source: <a href="https://github.com/wittysune/screenprinting-tools">github.com/wittysune/screenprinting-tools</a> · MIT license.</p>
+</footer>
+</div>
+</body>
+</html>
