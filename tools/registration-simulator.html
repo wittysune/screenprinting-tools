@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3-Axis Registration Adjustment Simulator — practice screen alignment</title>
+<style>
+:root{
+  --paper:#faf8f4; --paper-2:#f3f0e9; --card:#ffffff;
+  --ink:#1c1a16; --ink-3:#5c574e; --line:#e3ded3;
+  --accent:#c22a45; --c:#0090c0; --m:#d6336c; --y:#e8a900; --k:#1c1a16;
+  --sans:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);line-height:1.55}
+.cmyk{display:flex;height:4px}.cmyk span{flex:1}
+.cmyk .c{background:var(--c)}.cmyk .m{background:var(--m)}.cmyk .y{background:var(--y)}.cmyk .k{background:var(--k)}
+.wrap{max-width:960px;margin:0 auto;padding:0 16px 60px}
+header.top{border-bottom:1px solid var(--line);padding:18px 0 12px;margin-bottom:8px}
+header.top h1{font-family:var(--sans);font-size:1.35rem;margin:0 0 4px}
+header.top .sub{color:var(--ink-3);font-size:.9rem;margin:0}
+.tool { border: 1px solid var(--line); background: #fff; padding: 1.2rem 1.4rem 1rem; margin: 1.6rem 0; }
+.tool-row { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem .9rem; margin-bottom: .9rem; }
+.tool-row label { font-family: var(--sans); font-size: .82rem; letter-spacing: .04em; color: var(--ink-3); }
+.tool-row label.chk { display: flex; align-items: center; gap: .35rem; color: var(--ink); }
+.tool-row select, .tool-row input[type="number"] { font-family: var(--sans); font-size: .9rem; padding: .4rem .55rem; border: 1px solid var(--line); background: var(--paper, #faf8f4); color: var(--ink); }
+.tool-row input[type="checkbox"] { accent-color: var(--accent); width: 1rem; height: 1rem; }
+.tool-note { font-size: .85rem; color: var(--ink-3); margin: .2rem 0 0; }
+footer{border-top:1px solid var(--line);margin-top:26px;padding-top:14px;font-size:.8rem;color:var(--ink-3)}
+footer a{color:var(--accent)}
+</style>
+</head><body>
+<div class="cmyk"><span class="c"></span><span class="m"></span><span class="y"></span><span class="k"></span></div><div class="wrap">
+<header class="top"><h1>3-Axis Registration Adjustment Simulator</h1><p class="sub">Practice aligning a two-layer job on a virtual three-axis press (X / Y1 / Y2) — guided lessons, random challenges, step-by-step solutions. Make your mistakes here, not on the machine.</p></header>
+    <div id="regsim">
+<div class="modes">
+  <button id="m-free" class="on">Free Practice</button>
+  <button id="m-quiz">Random Challenge</button>
+  <button id="m-lessons">Guided Lessons</button>
+  <button id="m-answer" style="display:none;">Show Me Step by Step</button>
+  <button id="m-reset">Reset</button>
+</div>
+
+<div id="stage-wrap"><svg id="stage" viewBox="0 0 700 440"></svg></div>
+
+<div id="narr">
+  <div id="status">Free practice: drag a handwheel to rotate it (clockwise = positive direction) and watch how the four red marks move.</div>
+  <div id="steps"></div>
+  <div id="player">
+    <button class="pbtn" id="p-prev">◀ Prev</button>
+    <button class="pbtn" id="p-next">Next ▶</button>
+    <button class="pbtn" id="p-replay">⟳ Replay Step</button>
+    <button class="pbtn" id="p-auto">Auto-play</button>
+    <button class="pbtn" id="p-slow">Slow</button>
+    <span id="prog"></span>
+  </div>
+</div>
+
+<div id="wheels">
+  <div class="wheel-card" data-axis="X">
+    <div class="name">X Handwheel</div><div class="role">Left/right · moves all 4 marks</div>
+    <svg viewBox="0 0 120 120"></svg>
+    <div class="readout" id="rX">0 div (0.00mm)</div>
+    <div class="nudge"><button data-d="-1">−1 div</button><button data-d="1">+1 div</button></div>
+  </div>
+  <div class="wheel-card" data-axis="Y1">
+    <div class="name">Y1 Handwheel</div><div class="role">Front-back, left side · marks 1 &amp; 3</div>
+    <svg viewBox="0 0 120 120"></svg>
+    <div class="readout" id="rY1">0 div (0.00mm)</div>
+    <div class="nudge"><button data-d="-1">−1 div</button><button data-d="1">+1 div</button></div>
+  </div>
+  <div class="wheel-card" data-axis="Y2">
+    <div class="name">Y2 Handwheel</div><div class="role">Front-back, right side · marks 2 &amp; 4</div>
+    <svg viewBox="0 0 120 120"></svg>
+    <div class="readout" id="rY2">0 div (0.00mm)</div>
+    <div class="nudge"><button data-d="-1">−1 div</button><button data-d="1">+1 div</button></div>
+  </div>
+</div>
+
+<div id="lessons"></div>
+<p class="hint">Tolerance: ±0.05mm (1 division). On-screen error is magnified 38×. Drag the wheel for coarse adjustment, tap ±1 div for fine adjustment — same as the real machine: coarse first, then fine. Guided lessons play one step at a time: each step pauses when it finishes. During animation, red marks show a movement arrow and a Δ value.</p>
+    </div>
+
+    <div class="prose">
+      <h2>How to use it</h2>
+      <p>Four modes, in the order I'd hand them to a new operator:</p>
+      <figure><img src="/images/tools/regsim/01-overview.png" alt="The simulator: four registration marks on the stage (black = layer 1 reference, red = layer 2), the narration card, and the three handwheels — X, Y1 (left side), Y2 (right side)." loading="lazy" /><figcaption>The simulator: four registration marks on the stage (black = layer 1 reference, red = layer 2), the narration card, and the three handwheels — X, Y1 (left side), Y2 (right side).</figcaption></figure>
+      <ol>
+        <li><strong>Guided Lessons</strong> — five typical error patterns, animated step by step: pure X shift, pure Y shift, pure rotation, a mixed real-world case, and the one no handwheel can fix (stretch). Watch each one, ideally twice.</li>
+        <li><strong>Free Practice</strong> — no error loaded. Turn each handwheel and just watch which marks move and in what direction. Build the mental map: X moves all four marks sideways; Y1 moves the two left marks; Y2 moves the two right marks.</li>
+        <li><strong>Random Challenge</strong> — the simulator loads a hidden misalignment. Bring all four red marks onto the black ones within ±1 division, in as few turns as possible. If you're stuck, <strong>Show Me Step by Step</strong> walks you through the correct solution — which wheel, which direction, how many divisions, and <em>why</em>.</li>
+        <li><strong>Reset</strong> — zero everything.</li>
+      </ol>
+      <figure><img src="/images/tools/regsim/14-teach-mode.png" alt="“Show Me Step by Step” narrates every move — which wheel, which direction, how many divisions — with a player to step through, replay or slow down." loading="lazy" /><figcaption>“Show Me Step by Step” narrates every move — which wheel, which direction, how many divisions — with a player to step through, replay or slow down.</figcaption></figure>
+      <p>The on-screen error is magnified 38× so you can see it; the handwheel readouts always show real millimetres. One division is assumed to be 0.05&nbsp;mm with 20 divisions per turn — check this against your own machine's scale before applying the habits.</p>
+
+      <h2>The one concept that makes three axes simple: the common component</h2>
+      <p>Operators who struggle with Y1/Y2 usually struggle because they see <em>two</em> front-back adjustments. Experienced operators see <strong>one shared movement plus one difference</strong>. This is the single most useful idea in three-axis registration, so here it is properly.</p>
+      <div class="img-trio"><figure><img src="/images/tools/regsim/02-lesson1-x-shift.png" alt="Pattern 1 — X translation: all four red marks shifted sideways by the same amount." loading="lazy" /><figcaption>Pattern 1 — X translation: all four red marks shifted sideways by the same amount.</figcaption></figure><figure><img src="/images/tools/regsim/03-lesson2-y-shift.png" alt="Pattern 2 — Y translation: all four shifted front-back, same direction, same amount." loading="lazy" /><figcaption>Pattern 2 — Y translation: all four shifted front-back, same direction, same amount.</figcaption></figure><figure><img src="/images/tools/regsim/04-lesson3-rotation.png" alt="Pattern 3 — rotation: left side one way, right side the opposite way." loading="lazy" /><figcaption>Pattern 3 — rotation: left side one way, right side the opposite way.</figcaption></figure></div>
+      <p>Take whatever front-back error you measure on the left side and on the right side, and split it into two parts:</p>
+      <ul>
+        <li><strong>The common component</strong> — the part both sides share: <code>(left + right) ÷ 2</code>. Both Y1 and Y2 turn in the <em>same direction, by the same amount</em> to remove it. The whole screen shifts forward or backward as one rigid piece. No rotation is introduced.</li>
+        <li><strong>The differential component</strong> — what's left after the common part is removed: <code>(right − left) ÷ 2</code> on each side, in opposite directions. Y1 and Y2 turn in <em>opposite directions, by the same amount</em>. The screen pivots around its centre. Pure rotation, no net shift.</li>
+      </ul>
+      <p><strong>Any front-back error is exactly these two parts added together.</strong> A worked example from Lesson 4: after X is fixed, the left marks are off by 0.10&nbsp;mm toward the rear and the right marks by 0.70&nbsp;mm. Split it:</p>
+      <figure><img src="/images/tools/regsim/05-lesson4-initial.png" alt="The worked example on stage: after X is fixed, every red mark sits toward the rear of its black target — but the right side (0.70 mm) is off much more than the left (0.10 mm)." loading="lazy" /><figcaption>The worked example on stage: after X is fixed, every red mark sits toward the rear of its black target — but the right side (0.70 mm) is off much more than the left (0.10 mm).</figcaption></figure>
+      <ul>
+        <li>Common component: (0.10 + 0.70) ÷ 2 = <strong>0.40&nbsp;mm</strong> → turn Y1 and Y2 <em>together</em>, 8 divisions each (at 0.05&nbsp;mm/div), toward the front.</li>
+      <figure><img src="/images/tools/regsim/08-lesson4-common-done.png" alt="After the common component is removed (Y1 = Y2 = −8 div): the average error is gone and what remains is pure rotation — left slightly high, right slightly low. This is the moment to switch from “same direction” to “opposite directions”." loading="lazy" /><figcaption>After the common component is removed (Y1 = Y2 = −8 div): the average error is gone and what remains is pure rotation — left slightly high, right slightly low. This is the moment to switch from “same direction” to “opposite directions”.</figcaption></figure>
+        <li>What remains: left 0.10 − 0.40 = <strong>−0.30</strong>, right 0.70 − 0.40 = <strong>+0.30</strong> — equal and opposite, i.e. pure rotation → turn Y1 and Y2 in <em>opposite</em> directions, 6 divisions each.</li>
+      </ul>
+      <p>0.40 + 0.30 = 0.70 on the right, 0.40 − 0.30 = 0.10 on the left — the split adds back up exactly. Once you can do this decomposition in your head, Y1 and Y2 stop being mysterious: <strong>same-direction turns shift, opposite-direction turns rotate, and every real error is some mixture of the two.</strong></p>
+      <figure><img src="/images/tools/regsim/10-lesson4-registered.png" alt="After the differential component: all four marks registered. Final wheel positions: X −10 div, Y1 −2 div, Y2 −14 div — and every division had a reason." loading="lazy" /><figcaption>After the differential component: all four marks registered. Final wheel positions: X −10 div, Y1 −2 div, Y2 −14 div — and every division had a reason.</figcaption></figure>
+
+      <h2>The sequence that saves turns</h2>
+      <figure><img src="/images/tools/regsim/06-lesson4-mid-anim.png" alt="An X correction mid-animation: red marks carry movement arrows and Δ values (in mm) so you can see the correction happening, not just the result." loading="lazy" /><figcaption>An X correction mid-animation: red marks carry movement arrows and Δ values (in mm) so you can see the correction happening, not just the result.</figcaption></figure><figure><img src="/images/tools/regsim/09-wheels-highlight.png" alt="During a rotation step only Y1 and Y2 are lit — the wheel being turned is always the one highlighted; X stays dimmed at its final −10 div." loading="lazy" /><figcaption>During a rotation step only Y1 and Y2 are lit — the wheel being turned is always the one highlighted; X stays dimmed at its final −10 div.</figcaption></figure>
+      <p>Fix <strong>X first, then the common Y component, then rotation last</strong>. Rotation is last for a physical reason: the screen pivots around its centre, so any rotation correction moves every mark's position slightly — if you rotate first, your earlier translation readings were taken on a crooked screen and you'll re-do them. In this simulator the axes are perfectly independent, as they are on servo-driven presses; on the real machine, print one test sheet between major steps and re-measure all four marks before deciding the next move.</p>
+
+      <h2>What the handwheels cannot fix</h2>
+      <figure><img src="/images/tools/regsim/11-lesson5-stretch.png" alt="The stretch pattern: front marks sit perfectly on target while both rear marks are off toward the rear — the second layer is physically longer than the first." loading="lazy" /><figcaption>The stretch pattern: front marks sit perfectly on target while both rear marks are off toward the rear — the second layer is physically longer than the first.</figcaption></figure>
+      <p>Lesson 5 shows the pattern that fools everyone once: the rear marks are off more than the front marks, and no combination of X, Y1 and Y2 gets all four aligned. That's not misregistration — the mesh has been <strong>stretched along the print direction by the squeegee</strong>, and the printed image is physically longer than the first layer. Positioning axes move the screen; they cannot un-stretch an image. The fixes live elsewhere: screen warping / stretch compensation if your press has it (set separately for left and right), and checking squeegee pressure, snap-off distance, and screen tension. Learning to recognise this pattern early — instead of burning an hour chasing it with handwheels — is worth the whole simulator.</p>
+      <figure><img src="/images/tools/regsim/12-lesson5-cant-fix.png" alt="Proof by experiment: pull Y back and the rear marks align — but now the front marks are off. No handwheel combination gets all four at once, because stretch is not a position error." loading="lazy" /><figcaption>Proof by experiment: pull Y back and the rear marks align — but now the front marks are off. No handwheel combination gets all four at once, because stretch is not a position error.</figcaption></figure>
+
+      <h2>Scope and honest limits</h2>
+      <p>This is a training aid, not a digital twin of your press. Axis direction conventions, divisions per millimetre, and which side Y1 controls vary by manufacturer — verify them on your machine (the assumptions here: X positive rightward, Y positive toward the rear, Y1 left side, 0.05&nbsp;mm per division). Real machines add effects the simulator deliberately omits in its default mode: mesh relaxation after adjustment, clamp settling, and backlash. The patterns it teaches — read before you touch, split common from differential, translate before you rotate, recognise stretch — transfer to any three-axis system.</p>
+      <p>Related: the <a href="/tools/registration-mark-generator/">Registration Mark Generator</a> for putting the marks on your films in the first place, and the <a href="/tools/mesh-selector/">Screen Mesh Selector</a> for the screen itself.</p>
+    </div>
+  <style>
+#regsim h1 { font-size: 1.12rem; margin-bottom: 4px; }
+#regsim .sub { font-size: .78rem; color: #8a857c; margin-bottom: 10px; }
+#regsim .modes { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+#regsim .modes button { font-size: .84rem; padding: 8px 13px; border: 1px solid #26231f; background: #fff; cursor: pointer; border-radius: 4px; }
+#regsim .modes button.on { background: #26231f; color: #faf8f4; }
+#regsim #stage-wrap { background: #fff; border: 1px solid #d8d2c8; border-radius: 6px; padding: 6px; }
+#regsim svg#stage { display: block; width: 100%; height: auto; }
+#regsim #wheels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+#regsim .wheel-card { background: #fff; border: 1px solid #d8d2c8; border-radius: 6px; padding: 8px 6px 10px; text-align: center; transition: opacity .25s, border-color .25s, box-shadow .25s; }
+#regsim .wheel-card .name { font-size: .85rem; font-weight: 700; }
+#regsim .wheel-card .role { font-size: .68rem; color: #8a857c; margin: 2px 0 4px; }
+#regsim .wheel-card svg { width: 100%; max-width: 130px; height: auto; cursor: grab; touch-action: none; }
+#regsim .wheel-card svg:active { cursor: grabbing; }
+#regsim .wheel-card .readout { font-size: .82rem; font-variant-numeric: tabular-nums; margin-top: 2px; }
+#regsim .wheel-card .readout b { color: #c8452c; }
+#regsim .wheel-card .nudge { display: flex; gap: 5px; margin-top: 5px; }
+#regsim .wheel-card .nudge button { flex: 1; font-size: .75rem; padding: 6px 0; border: 1px solid #b8b4ad; background: #faf8f4; border-radius: 4px; cursor: pointer; }
+#regsim .wheel-card.active { border-color: #c8452c; box-shadow: 0 0 0 1.5px #c8452c; }
+#regsim .wheel-card.dim { opacity: .4; }
+#regsim /* narration card: right under the stage */
+  #narr { margin-top: 8px; }
+#regsim #status { padding: 10px 14px; border-radius: 6px; font-size: .9rem; line-height: 1.55; background: #fff; border: 1px solid #d8d2c8; min-height: 3.2em; }
+#regsim #status.win { background: #e8f4e5; border-color: #9fc794; }
+#regsim #status.teach { background: #eef2f7; border-color: #b9c6d8; }
+#regsim #status.stretch { background: #fdf3e3; border-color: #e8d5ae; }
+#regsim #status b, #regsim #steps b { color: #c8452c; }
+#regsim #steps { font-size: .78rem; color: #8a857c; margin-top: 5px; }
+#regsim /* player controls */
+  #player { display: none; margin-top: 8px; gap: 6px; flex-wrap: wrap; align-items: center; }
+#regsim #player .pbtn { font-size: .8rem; padding: 7px 11px; border: 1px solid #26231f; background: #fff; border-radius: 4px; cursor: pointer; }
+#regsim #player .pbtn:disabled { opacity: .35; cursor: default; }
+#regsim #player .pbtn.on { background: #26231f; color: #faf8f4; }
+#regsim #prog { font-size: .78rem; color: #8a857c; margin-left: auto; font-variant-numeric: tabular-nums; }
+#regsim #dots { letter-spacing: 3px; color: #c8452c; }
+#regsim #lessons { display: none; margin-top: 10px; }
+#regsim #lessons .lbtn { display: block; width: 100%; text-align: left; font-size: .85rem; padding: 9px 12px; margin-bottom: 6px; border: 1px solid #d8d2c8; background: #fff; border-radius: 5px; cursor: pointer; }
+#regsim #lessons .lbtn:hover { border-color: #c8452c; }
+#regsim .hint { font-size: .76rem; color: #8a857c; margin-top: 8px; line-height: 1.6; }
+
+#regsim { background: #f5f2ec; border: 1px solid #d8d2c8; border-radius: 8px; padding: 14px; margin: 1.2rem 0 1.6rem; }
+#regsim code { font-size: .9em; }
+#regsim #player { padding-right: 8px; }
+.prose figure { margin: 1.4rem 0; }
+.prose figure img { width: 100%; height: auto; border: 1px solid #d8d2c8; border-radius: 6px; display: block; }
+.prose figcaption { font-size: .82rem; color: #8a857c; margin-top: .45rem; line-height: 1.5; }
+.prose .img-trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 1.4rem 0; }
+.prose .img-trio figure { margin: 0; }
+@media (max-width: 640px) { .prose .img-trio { grid-template-columns: 1fr; } }
+  </style>
+  <script>
+
+(function () {
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  var stage = document.getElementById('stage');
+  var W = 700, H = 440, MX = 55, MY = 42, SCALE = 38;
+  var DIV_MM = 0.05;            // 1 division = 0.05mm (verify against actual machine)
+  var DIVS_PER_TURN = 20;       // 20 divisions per turn = 1mm
+  var MARKS = [
+    { id: 1, x: MX, y: MY, label: '1·Front-Left' },
+    { id: 2, x: W - MX, y: MY, label: '2·Front-Right' },
+    { id: 3, x: MX, y: H - MY, label: '3·Rear-Left' },
+    { id: 4, x: W - MX, y: H - MY, label: '4·Rear-Right' }
+  ];
+  var err = { dx: 0, dy1: 0, dy2: 0, stretch: 0 };
+  var adj = { X: 0, Y1: 0, Y2: 0 };      // mm
+  var mode = 'free', steps = 0, anim = null, wheelRot = { X: 0, Y1: 0, Y2: 0 }; // visual angle of handwheels
+
+  /* lesson playback state */
+  var curSeq = null, curIdx = -1, curTitle = '', autoPlay = false, slowMo = false;
+  var pendingT = null, autoT = null;
+  var fxTrail = [];   // sampled mark positions per animation frame [{pos:[{x,y}x4]},...]
+
+  function el(tag, attrs) {
+    var e = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function markGroup(x, y, color, op) {
+    var g = el('g', { stroke: color, 'stroke-width': 1.4, fill: 'none', opacity: op });
+    g.appendChild(el('line', { x1: x - 11, y1: y, x2: x + 11, y2: y }));
+    g.appendChild(el('line', { x1: x, y1: y - 11, x2: x, y2: y + 11 }));
+    g.appendChild(el('circle', { cx: x, cy: y, r: 8 }));
+    g.appendChild(el('circle', { cx: x, cy: y, r: 4.5 }));
+    return g;
+  }
+  function layer2Pos(m) {
+    var isLeft = (m.id === 1 || m.id === 3), isRear = (m.id === 3 || m.id === 4);
+    var ddx = err.dx + adj.X;
+    var ddy = (isLeft ? err.dy1 + adj.Y1 : err.dy2 + adj.Y2);
+    if (err.stretch) ddy += err.stretch * (isRear ? 1 : 0.15);
+    return { x: m.x + ddx * SCALE, y: m.y + ddy * SCALE };
+  }
+  function curPos() { return MARKS.map(layer2Pos); }
+  function maxErr() {
+    var w = 0;
+    MARKS.forEach(function (m) {
+      var p = layer2Pos(m);
+      w = Math.max(w, Math.hypot(p.x - m.x, p.y - m.y) / SCALE);
+    });
+    return w;
+  }
+
+  /* ---------- Handwheels ---------- */
+  var wheelSvgs = {}, wheelCards = {};
+  document.querySelectorAll('.wheel-card').forEach(function (card) {
+    var axis = card.dataset.axis, svg = card.querySelector('svg');
+    wheelSvgs[axis] = svg; wheelCards[axis] = card;
+    buildWheel(svg, axis);
+    // drag to rotate (locked during playback)
+    var dragging = false, lastA = 0;
+    function angleOf(ev) {
+      var r = svg.getBoundingClientRect();
+      var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      var p = ev.touches ? ev.touches[0] : ev;
+      return Math.atan2(p.clientY - cy, p.clientX - cx);
+    }
+    function down(ev) { if (anim || curSeq) return; dragging = true; lastA = angleOf(ev); ev.preventDefault(); }
+    function move(ev) {
+      if (!dragging) return;
+      var a = angleOf(ev), d = a - lastA;
+      if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI;
+      lastA = a;
+      var divs = d / (2 * Math.PI) * DIVS_PER_TURN;
+      addDivs(axis, divs);
+    }
+    function up() { dragging = false; snap(axis); }
+    svg.addEventListener('mousedown', down);
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+    svg.addEventListener('touchstart', down, { passive: false });
+    svg.addEventListener('touchmove', move, { passive: false });
+    svg.addEventListener('touchend', up);
+    card.querySelectorAll('.nudge button').forEach(function (b) {
+      b.addEventListener('click', function () { if (!anim && !curSeq) { addDivs(axis, +b.dataset.d); snap(axis); } });
+    });
+  });
+
+  function buildWheel(svg, axis) {
+    svg.innerHTML = '';
+    var cx = 60, cy = 60, R = 52;
+    svg.appendChild(el('circle', { cx: cx, cy: cy, r: R, fill: '#faf8f4', stroke: '#8a857c', 'stroke-width': 1.5 }));
+    // scale: 20 divisions per turn, longer tick + number every 5
+    for (var i = 0; i < DIVS_PER_TURN; i++) {
+      var a = i / DIVS_PER_TURN * 2 * Math.PI - Math.PI / 2;
+      var long = (i % 5 === 0);
+      var r1 = R - (long ? 12 : 7), r2 = R - 2;
+      svg.appendChild(el('line', {
+        x1: cx + r1 * Math.cos(a), y1: cy + r1 * Math.sin(a),
+        x2: cx + r2 * Math.cos(a), y2: cy + r2 * Math.sin(a),
+        stroke: '#8a857c', 'stroke-width': long ? 1.6 : 1
+      }));
+      if (long) {
+        var t = el('text', { x: cx + (R - 20) * Math.cos(a), y: cy + (R - 20) * Math.sin(a) + 3, 'text-anchor': 'middle', 'font-size': 8, fill: '#8a857c' });
+        t.textContent = i; svg.appendChild(t);
+      }
+    }
+    // rotating pointer group (turns with the handwheel value)
+    var g = el('g', { id: 'rot-' + axis });
+    g.appendChild(el('circle', { cx: cx, cy: cy, r: 26, fill: '#fff', stroke: '#b8b4ad' }));
+    g.appendChild(el('line', { x1: cx, y1: cy, x2: cx, y2: cy - 24, stroke: '#c8452c', 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    g.appendChild(el('circle', { cx: cx, cy: cy, r: 4, fill: '#26231f' }));
+    svg.appendChild(g);
+    // fixed marker at top
+    var mk = el('polygon', { points: (cx - 5) + ',2 ' + (cx + 5) + ',2 ' + cx + ',10', fill: '#26231f' });
+    svg.appendChild(mk);
+  }
+
+  function renderWheel(axis) {
+    var g = wheelSvgs[axis].querySelector('#rot-' + axis);
+    g.setAttribute('transform', 'rotate(' + wheelRot[axis] + ' 60 60)');
+    var divs = Math.round(adj[axis] / DIV_MM);
+    var mm = adj[axis];
+    document.getElementById('r' + axis).innerHTML =
+      '<b>' + (divs > 0 ? '+' : '') + divs + '</b> div (' + (mm > 0 ? '+' : '') + mm.toFixed(2) + 'mm)';
+  }
+
+  function addDivs(axis, divs) {
+    adj[axis] += divs * DIV_MM;
+    adj[axis] = Math.max(-2, Math.min(2, adj[axis]));
+    wheelRot[axis] += divs / DIVS_PER_TURN * 360;
+    steps++;
+    draw();
+  }
+  function snap(axis) {
+    var divs = Math.round(adj[axis] / DIV_MM);
+    adj[axis] = divs * DIV_MM;
+    wheelRot[axis] = divs / DIVS_PER_TURN * 360;
+    draw();
+  }
+
+  /* ---------- highlight the handwheel(s) being turned ---------- */
+  function highlightAxes(targets) {
+    var any = false;
+    Object.keys(wheelCards).forEach(function (ax) {
+      var on = targets && targets[ax] !== undefined;
+      wheelCards[ax].classList.toggle('active', !!on);
+      wheelCards[ax].classList.toggle('dim', !!targets && !on);
+      if (on) any = true;
+    });
+    if (!any) Object.keys(wheelCards).forEach(function (ax) { wheelCards[ax].classList.remove('dim'); });
+  }
+  function clearHighlight() {
+    Object.keys(wheelCards).forEach(function (ax) { wheelCards[ax].classList.remove('active', 'dim'); });
+  }
+
+  /* ---------- Scene ---------- */
+  var ARROW_DEFS_DONE = false;
+  function ensureArrowDefs() {
+    if (ARROW_DEFS_DONE) return;
+    ARROW_DEFS_DONE = true;
+    var defs = el('defs', {});
+    var mk = el('marker', { id: 'arrh', viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse' });
+    mk.appendChild(el('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: '#c8452c' }));
+    defs.appendChild(mk);
+    stage.appendChild(defs);
+  }
+  function draw() {
+    stage.innerHTML = '';
+    ensureArrowDefs();
+    stage.appendChild(el('rect', { x: 20, y: 10, width: W - 40, height: H - 20, fill: '#fffdf9', stroke: '#b8b4ad' }));
+    [['FRONT', W / 2, 28], ['REAR', W / 2, H - 16], ['LEFT', 30, H / 2], ['RIGHT', W - 30, H / 2]].forEach(function (d) {
+      var t = el('text', { x: d[1], y: d[2], 'text-anchor': 'middle', 'font-size': 13, fill: '#c8c2b8' });
+      t.textContent = d[0]; stage.appendChild(t);
+    });
+    // movement start -> current position: arrow + Δ value
+    var n = fxTrail.length;
+    if (n >= 2) {
+      var from = fxTrail[0].pos, to = fxTrail[n - 1].pos;
+      from.forEach(function (f, i) {
+        var dx = to[i].x - f.x, dy = to[i].y - f.y;
+        var dist = Math.hypot(dx, dy);
+        if (dist > 6) {
+          stage.appendChild(el('line', { x1: f.x, y1: f.y, x2: to[i].x - dx / dist * 14, y2: to[i].y - dy / dist * 14, stroke: '#c8452c', 'stroke-width': 1.2, 'stroke-dasharray': '5 4', opacity: 0.75, 'marker-end': 'url(#arrh)' }));
+          var t = el('text', { x: (f.x + to[i].x) / 2 + 13, y: (f.y + to[i].y) / 2 - 9, 'font-size': 12, 'font-weight': 700, fill: '#c8452c' });
+          t.textContent = 'Δ' + (dist / SCALE).toFixed(2);
+          stage.appendChild(t);
+        }
+      });
+    }
+    MARKS.forEach(function (m) { stage.appendChild(markGroup(m.x, m.y, '#26231f', 1)); });
+    MARKS.forEach(function (m) { var p = layer2Pos(m); stage.appendChild(markGroup(p.x, p.y, '#c8452c', 0.85)); });
+    MARKS.forEach(function (m) {
+      var rightSide = m.x > W / 2;
+      var t = el('text', { x: m.x + (rightSide ? -15 : 15), y: m.y - 12, 'font-size': 11, fill: '#8a857c', 'text-anchor': rightSide ? 'end' : 'start' });
+      t.textContent = m.label; stage.appendChild(t);
+    });
+    ['X', 'Y1', 'Y2'].forEach(renderWheel);
+    check();
+  }
+
+  var statusEl = document.getElementById('status'), stepsEl = document.getElementById('steps');
+  function setStatus(html, cls) { statusEl.className = cls || ''; statusEl.innerHTML = html; }
+
+  function check() {
+    if (anim) return;
+    var e = maxErr();
+    if (mode === 'quiz') {
+      stepsEl.textContent = 'Turns used: ' + steps + ' · current max error ' + e.toFixed(3) + ' mm';
+      if (e <= DIV_MM + 1e-9 && !curSeq) setStatus('✅ Registered! All four marks are within ±1 division. Review your moves: did you read the pattern (translation vs. rotation) before touching the wheels?', 'win');
+    } else if ((mode === 'stretch' || (mode === 'lessons' && curLesson === 4)) && !curSeq) {
+      if (e <= DIV_MM + 1e-9) setStatus('⚠️ Impossible to register — Layer 2 has been stretched along the print direction by the squeegee; the positioning axes cannot undo deformation. Correct fix: "Screen Warping Compensation" (manual §7.15, set left/right separately), and check squeegee pressure / snap-off gap / screen tension.', 'stretch');
+    }
+  }
+
+  /* ---------- Animation engine ---------- */
+  function animateTo(targets, text, cls, done, fast) {
+    if (anim) cancelAnimationFrame(anim);
+    if (text !== undefined) setStatus(text, cls);
+    var start = { X: adj.X, Y1: adj.Y1, Y2: adj.Y2 };
+    var startRot = { X: wheelRot.X, Y1: wheelRot.Y1, Y2: wheelRot.Y2 };
+    var t0 = null, DUR = fast ? 500 : (slowMo ? 3400 : 1600);
+    function frame(t) {
+      if (!t0) t0 = t;
+      var k = Math.min(1, (t - t0) / DUR);
+      var e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      ['X', 'Y1', 'Y2'].forEach(function (ax) {
+        if (targets[ax] !== undefined) {
+          adj[ax] = start[ax] + (targets[ax] - start[ax]) * e;
+          var divs = targets[ax] / DIV_MM;
+          wheelRot[ax] = startRot[ax] + (divs / DIVS_PER_TURN * 360 - startRot[ax]) * e;
+        }
+      });
+      fxTrail.push({ pos: curPos() });
+      if (fxTrail.length > 26) fxTrail.shift();
+      draw();
+      if (k < 1) anim = requestAnimationFrame(frame);
+      else {
+        anim = null;
+        ['X', 'Y1', 'Y2'].forEach(function (ax) { if (targets[ax] !== undefined) { adj[ax] = targets[ax]; wheelRot[ax] = targets[ax] / DIV_MM / DIVS_PER_TURN * 360; } });
+        draw();
+        if (done) setTimeout(done, 400);
+      }
+    }
+    anim = requestAnimationFrame(frame);
+  }
+  function divsTxt(mm) { var d = Math.round(Math.abs(mm) / DIV_MM); return d + ' div (' + Math.abs(mm).toFixed(2) + 'mm)'; }
+  function dirX(mm) { return mm > 0 ? 'shifted right' : 'shifted left'; }
+  function dirY(mm) { return mm > 0 ? 'shifted toward the rear' : 'shifted toward the front'; }
+
+  /* ---------- Step-by-step teaching (the answer): same player ---------- */
+  function teachAnswer() {
+    if (anim || mode !== 'quiz' || curSeq) return;
+    var tX = -err.dx, tY1 = -err.dy1, tY2 = -err.dy2;
+    var yCom = (tY1 + tY2) / 2;
+    var seq = [];
+    if (Math.abs(tX) > 1e-9) seq.push({
+      targets: { X: tX },
+      text: 'Step 1 [X translation] All four marks are ' + dirX(err.dx) + ' → turn the <b>X handwheel ' + divsTxt(tX) + '</b> (' + (tX > 0 ? 'clockwise' : 'counterclockwise') + ') to bring them all back together.'
+    });
+    if (Math.abs(yCom) > 1e-9) seq.push({
+      targets: { Y1: adj.Y1 + yCom, Y2: adj.Y2 + yCom },
+      text: 'Step 2 [Y translation] On average the whole image is ' + dirY(-yCom) + ' by ' + Math.abs(yCom).toFixed(2) + 'mm → turn <b>Y1 and Y2 together, ' + divsTxt(yCom) + ' each</b>. Same direction, same amount = pure front-back translation, no rotation.'
+    });
+    var finalY1 = tY1, finalY2 = tY2;
+    if (Math.abs(finalY1 - finalY2) > 1e-9) seq.push({
+      targets: { Y1: finalY1, Y2: finalY2 },
+      text: 'Step 3 [Rotation] Left and right differ by ' + (Math.abs(finalY1 - finalY2) / 2).toFixed(2) + 'mm each way → turn <b>Y1 to ' + Math.round(finalY1 / DIV_MM) + ' div and Y2 to ' + Math.round(finalY2 / DIV_MM) + ' div</b> (opposite directions) — the difference between the two axes removes the rotation.'
+    });
+    seq.push({ targets: {}, text: '✅ Registered. Remember the sequence: <b>X translation → Y translation → rotation last</b>. On the real machine, print a test sheet between steps, but the order stays the same.', cls: 'win' });
+    setStatus('OK, let\'s do it step by step. Press "Next" to start; each step pauses when it finishes.', 'teach');
+    startPlayback(seq, 'Step-by-step');
+  }
+
+  /* ---------- Player ---------- */
+  var playerEl = document.getElementById('player'), progEl = document.getElementById('prog');
+  function showPlayer(on) { playerEl.style.display = on ? 'flex' : 'none'; }
+  function updateProg() {
+    if (!curSeq) { progEl.textContent = ''; return; }
+    var dots = '';
+    for (var i = 0; i < curSeq.length; i++) dots += (i <= curIdx ? '●' : '○');
+    progEl.innerHTML = '<span id="dots">' + dots + '</span>　' + (curIdx + 1) + ' / ' + curSeq.length + ' · ' + curTitle;
+    document.getElementById('p-prev').disabled = (curIdx <= 0);
+    document.getElementById('p-next').disabled = (curIdx >= curSeq.length - 1);
+    document.getElementById('p-replay').disabled = (curIdx < 0);
+  }
+  function clearTimers() { if (pendingT) { clearTimeout(pendingT); pendingT = null; } if (autoT) { clearTimeout(autoT); autoT = null; } }
+
+  function startPlayback(seq, title) {
+    curSeq = seq; curIdx = -1; curTitle = title;
+    autoPlay = false; document.getElementById('p-auto').classList.remove('on');
+    fxTrail = [];
+    showPlayer(true); updateProg();
+  }
+  function endPlayback() {
+    curSeq = null; curIdx = -1; clearTimers(); clearHighlight();
+    showPlayer(false); fxTrail = []; draw();
+  }
+  /* instantly apply steps 0..i-1 (for jump/back/replay) */
+  function applyStepsInstant(upto) {
+    adj = { X: 0, Y1: 0, Y2: 0 }; wheelRot = { X: 0, Y1: 0, Y2: 0 };
+    for (var k = 0; k <= upto; k++) {
+      var tg = curSeq[k].targets;
+      if (tg) Object.keys(tg).forEach(function (ax) {
+        adj[ax] = tg[ax]; wheelRot[ax] = tg[ax] / DIV_MM / DIVS_PER_TURN * 360;
+      });
+    }
+  }
+  function gotoStep(i, fast) {
+    if (!curSeq || i < 0 || i >= curSeq.length) return;
+    clearTimers();
+    if (anim) { cancelAnimationFrame(anim); anim = null; }
+    curIdx = i;
+    var s = curSeq[i];
+    applyStepsInstant(i - 1);
+    fxTrail = [];
+    draw();
+    updateProg();
+    setStatus(s.text, s.cls || 'teach');
+    highlightAxes(s.targets);
+    pendingT = setTimeout(function () {
+      pendingT = null;
+      if (!s.targets || Object.keys(s.targets).length === 0) { finishStep(); return; }
+      animateTo(s.targets, undefined, undefined, finishStep, fast);
+    }, fast ? 80 : 1100);   // read the text first, then move
+  }
+  function finishStep() {
+    clearHighlight(); updateProg();
+    if (autoPlay && curIdx < curSeq.length - 1) {
+      autoT = setTimeout(function () { autoT = null; gotoStep(curIdx + 1); }, 1300);
+    }
+  }
+  document.getElementById('p-next').addEventListener('click', function () {
+    if (!curSeq || anim) return;
+    if (curIdx < 0) { gotoStep(0); return; }
+    gotoStep(Math.min(curIdx + 1, curSeq.length - 1));
+  });
+  document.getElementById('p-prev').addEventListener('click', function () {
+    if (!curSeq || anim || curIdx <= 0) return;
+    gotoStep(curIdx - 1);
+  });
+  document.getElementById('p-replay').addEventListener('click', function () {
+    if (!curSeq || anim || curIdx < 0) return;
+    gotoStep(curIdx, true);
+  });
+  document.getElementById('p-auto').addEventListener('click', function () {
+    autoPlay = !autoPlay;
+    this.classList.toggle('on', autoPlay);
+    if (autoPlay && curSeq && !anim && curIdx >= 0 && curIdx < curSeq.length - 1 && !autoT) {
+      autoT = setTimeout(function () { autoT = null; gotoStep(curIdx + 1); }, 800);
+    }
+    if (!autoPlay && autoT) { clearTimeout(autoT); autoT = null; }
+  });
+  document.getElementById('p-slow').addEventListener('click', function () {
+    slowMo = !slowMo;
+    this.classList.toggle('on', slowMo);
+  });
+
+  /* ---------- Guided lessons ---------- */
+  var curLesson = -1;
+  var LESSONS = [
+    { name: 'Lesson 1: Pure X Shift (Translation)', err: { dx: 0.6, dy1: 0, dy2: 0 },
+      intro: 'Read the pattern: all four red marks are <b>shifted to the right</b> by the same amount. This is an X translation — touch only the X handwheel.',
+      steps: [{ targets: { X: -0.6 }, text: 'Turn the X handwheel 12 divisions counterclockwise (0.6mm) → all four marks come back together. Use the translation axis for translation — don\'t touch Y.' }] },
+    { name: 'Lesson 2: Pure Y Shift (Translation)', err: { dx: 0, dy1: 0.5, dy2: 0.5 },
+      intro: 'All four marks are <b>shifted toward the rear</b>. Y translation: Y1 and Y2 <b>same direction, same amount</b>.',
+      steps: [{ targets: { Y1: -0.5, Y2: -0.5 }, text: 'Turn Y1 and Y2 by 10 divisions each — same direction, same amount. Both sides move together; no rotation is introduced.' }] },
+    { name: 'Lesson 3: Rotation (Left vs. Right)', err: { dx: 0, dy1: -0.4, dy2: 0.4 },
+      intro: 'Read the pattern: left marks toward the front, right marks toward the rear — <b>opposite directions</b>. This is rotation; turning X won\'t help.',
+      steps: [{ targets: { Y1: 0.4, Y2: -0.4 }, text: 'Turn Y1 and Y2 in <b>opposite directions</b>, 8 divisions each: one side forward, one side back, squaring the screen. Rotation = the difference between the two axes.' }] },
+    { name: 'Lesson 4: Mixed Error (Real-World Sequence)', err: { dx: 0.5, dy1: 0.1, dy2: 0.7 },
+      intro: 'Real production is mostly mixed errors: translation plus rotation. The key is the <b>sequence</b>.',
+      steps: [
+        { targets: { X: -0.5 }, text: 'Step 1 — X: remove the overall left-right error (10 div).' },
+        { targets: { Y1: -0.4, Y2: -0.4 }, text: 'Step 2 — Y translation: left is off by 0.1mm, right by 0.7mm. On average the <b>whole screen is 0.4mm toward the rear together</b> → turn Y1 and Y2 <b>the same direction, 8 div (0.40mm) each</b> to remove this common part. Only rotation remains.' },
+        { targets: { Y1: -0.1, Y2: -0.7 }, text: 'Step 3 — rotation: now the left side differs by +0.3 and the right by −0.3 from the average (one ahead, one behind) → turn Y1 from −8 to −2 div and Y2 from −8 to −14 div, <b>6 div each in opposite directions</b> — the difference squares the screen.' },
+        { targets: {}, text: '✅ Sequence mantra: <b>left-right first, then front-back, then rotate</b>. You can register out of order, but it takes more moves and you\'ll get confused.', cls: 'win' }
+      ] },
+    { name: 'Lesson 5: Stretch — Beyond the Positioning Axes', err: { dx: 0, dy1: 0, dy2: 0, stretch: 0.7 },
+      intro: 'Watch closely: the two rear marks are off more than the front ones — the image has been <b>stretched along the print direction</b> by the squeegee. Try the handwheels yourself first…',
+      steps: [
+        { targets: { Y1: -0.35, Y2: -0.35 }, text: 'For example, turn Y back: the rear marks align, but now the front marks are off. Two marks can never align at once.' },
+        { targets: { Y1: 0, Y2: 0 }, text: 'Turn them back. <b>Stretching is not a position problem — the positioning axes cannot fix it.</b>', cls: 'stretch' },
+        { targets: {}, text: 'The fix: <b>Screen Warping Compensation</b> (manual §7.15) — during the squeegee stroke the frame is dynamically pushed along the print direction, set separately for left and right; also check squeegee pressure, snap-off gap, and screen tension. Reference compensation for a 1000mm stroke: ~0.2–0.4mm.', cls: 'stretch' }
+      ] }
+  ];
+
+  function showLessons() {
+    var box = document.getElementById('lessons');
+    box.style.display = 'block';
+    box.innerHTML = '';
+    LESSONS.forEach(function (L, i) {
+      var b = document.createElement('button');
+      b.className = 'lbtn'; b.textContent = L.name;
+      b.addEventListener('click', function () { playLesson(i); });
+      box.appendChild(b);
+    });
+  }
+  function playLesson(i) {
+    if (anim) return;
+    curLesson = i;
+    var L = LESSONS[i];
+    err = { dx: L.err.dx || 0, dy1: L.err.dy1 || 0, dy2: L.err.dy2 || 0, stretch: L.err.stretch || 0 };
+    adj = { X: 0, Y1: 0, Y2: 0 }; wheelRot = { X: 0, Y1: 0, Y2: 0 };
+    fxTrail = []; steps = 0; draw();
+    setStatus(L.intro, 'teach');
+    startPlayback(L.steps.map(function (s) { return { targets: s.targets, text: s.text, cls: s.cls }; }), L.name);
+  }
+
+  /* ---------- Modes ---------- */
+  function rnd(a, b) { return Math.round((a + Math.random() * (b - a)) * 20) / 20; }
+  function setMode(m) {
+    mode = m; curLesson = -1;
+    endPlayback();
+    ['free', 'quiz', 'lessons'].forEach(function (k) {
+      document.getElementById('m-' + k).classList.toggle('on', k === m);
+    });
+    document.getElementById('lessons').style.display = 'none';
+    document.getElementById('m-answer').style.display = (m === 'quiz') ? '' : 'none';
+    stepsEl.textContent = '';
+    if (m === 'free') setStatus('Free practice: drag a handwheel to rotate it (clockwise = positive direction) and watch how the four red marks move.');
+    if (m === 'quiz') {
+      err.dx = rnd(-1, 1) || 0.4;
+      var rot = rnd(-0.8, 0.8) || 0.5, yb = rnd(-0.6, 0.6);
+      err.dy1 = yb - rot / 2; err.dy2 = yb + rot / 2;
+      setStatus('New challenge: use the handwheels to bring all four red marks onto the black marks (±1 div). Don\'t turn anything yet — <b>read the pattern first</b>: same direction = translation, opposite directions = rotation. Stuck? Tap "Show Me Step by Step".');
+    }
+    if (m === 'lessons') { setStatus('Pick a lesson to see typical error patterns and the matching adjustment, animated. Press "Next" to start; each step pauses when it finishes.'); showLessons(); }
+    draw();
+  }
+  function reset() {
+    if (anim) { cancelAnimationFrame(anim); anim = null; }
+    endPlayback();
+    err = { dx: 0, dy1: 0, dy2: 0, stretch: 0 };
+    adj = { X: 0, Y1: 0, Y2: 0 }; wheelRot = { X: 0, Y1: 0, Y2: 0 };
+    fxTrail = [];
+    steps = 0; setMode(mode);
+  }
+  document.getElementById('m-free').addEventListener('click', function () { reset(); setMode('free'); });
+  document.getElementById('m-quiz').addEventListener('click', function () { reset(); setMode('quiz'); });
+  document.getElementById('m-lessons').addEventListener('click', function () { reset(); setMode('lessons'); });
+  document.getElementById('m-reset').addEventListener('click', reset);
+  document.getElementById('m-answer').addEventListener('click', teachAnswer);
+
+  draw();
+})();
+
+  </script>
+<footer><p>Free, offline, single-file — from <a href="https://screenprintfoundry.com/tools/registration-simulator/">ScreenPrint Foundry</a>. Full guide with lesson walkthroughs on the tool page.</p></footer>
+</div>
+</body>
+</html>

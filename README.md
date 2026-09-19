@@ -35,6 +35,20 @@ A local database for your ink formulas.
 - Printable shop-floor mixing sheet
 - [Run it](https://wittysune.github.io/screenprinting-tools/tools/ink-recipe-manager.html) · [About this tool](https://screenprintfoundry.com/tools/ink-recipe-manager/)
 
+### 4. 3-Axis Registration Adjustment Simulator
+A training simulator for three-axis presses (X / Y1 / Y2).
+
+- Read misregistration patterns and split them into translation, the common front-back component, and rotation
+- Guided lessons, random challenges, step-by-step solutions, virtual handwheels
+- [Run it](https://wittysune.github.io/screenprinting-tools/tools/registration-simulator.html) · [Full guide with lesson walkthroughs](https://screenprintfoundry.com/tools/registration-simulator/)
+
+### 5. Registration Mark Generator
+Build a custom film-positive template, download as SVG.
+
+- Corner registration marks, center crop marks, gradation strip, separation label, custom artwork boxes
+- Matched to your film size; SVG imports into Illustrator / CorelDRAW / Inkscape
+- [Run it](https://wittysune.github.io/screenprinting-tools/tools/registration-mark-generator.html) · [About this tool](https://screenprintfoundry.com/tools/registration-mark-generator/)
+
 ## How these work
 
 - **Single file**: each tool is one self-contained .html — copy it to a USB stick, a shop-floor PC, a Mac, it runs anywhere a browser runs
@@ -48,7 +62,7 @@ The tools live alongside in-depth production guides at [screenprintfoundry.com](
 
 - [How to Find Your Exposure Time](https://screenprintfoundry.com/process/find-your-exposure-time/) — the step-wedge method explained
 - [Exposure Calculator Walkthrough](https://screenprintfoundry.com/process/exposure-calculator-guide/) — complete tour of tool #1
-- [Tools index](https://screenprintfoundry.com/tools/) — mesh converters, mesh selector, registration tools and more
+- [Tools index](https://screenprintfoundry.com/tools/) — mesh converters, mesh selector and more
 
 ## License
 

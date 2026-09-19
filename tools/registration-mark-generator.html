@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registration Mark Generator — custom film-positive template</title>
+<style>
+:root{
+  --paper:#faf8f4; --paper-2:#f3f0e9; --card:#ffffff;
+  --ink:#1c1a16; --ink-3:#5c574e; --line:#e3ded3;
+  --accent:#c22a45; --c:#0090c0; --m:#d6336c; --y:#e8a900; --k:#1c1a16;
+  --sans:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);line-height:1.55}
+.cmyk{display:flex;height:4px}.cmyk span{flex:1}
+.cmyk .c{background:var(--c)}.cmyk .m{background:var(--m)}.cmyk .y{background:var(--y)}.cmyk .k{background:var(--k)}
+.wrap{max-width:960px;margin:0 auto;padding:0 16px 60px}
+header.top{border-bottom:1px solid var(--line);padding:18px 0 12px;margin-bottom:8px}
+header.top h1{font-family:var(--sans);font-size:1.35rem;margin:0 0 4px}
+header.top .sub{color:var(--ink-3);font-size:.9rem;margin:0}
+.tool { border: 1px solid var(--line); background: #fff; padding: 1.2rem 1.4rem 1rem; margin: 1.6rem 0; }
+.tool-row { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem .9rem; margin-bottom: .9rem; }
+.tool-row label { font-family: var(--sans); font-size: .82rem; letter-spacing: .04em; color: var(--ink-3); }
+.tool-row label.chk { display: flex; align-items: center; gap: .35rem; color: var(--ink); }
+.tool-row select, .tool-row input[type="number"] { font-family: var(--sans); font-size: .9rem; padding: .4rem .55rem; border: 1px solid var(--line); background: var(--paper, #faf8f4); color: var(--ink); }
+.tool-row input[type="checkbox"] { accent-color: var(--accent); width: 1rem; height: 1rem; }
+.tool-note { font-size: .85rem; color: var(--ink-3); margin: .2rem 0 0; }
+footer{border-top:1px solid var(--line);margin-top:26px;padding-top:14px;font-size:.8rem;color:var(--ink-3)}
+footer a{color:var(--accent)}
+</style>
+</head><body>
+<div class="cmyk"><span class="c"></span><span class="m"></span><span class="y"></span><span class="k"></span></div><div class="wrap">
+<header class="top"><h1>Registration Mark Generator</h1><p class="sub">Build a custom film-positive template — corner registration marks, crop marks, gradation strip, separation label — matched to your film size. Live preview, SVG download for Illustrator / CorelDRAW / Inkscape.</p></header>
+    <div class="tool" id="regtool">
+      <div class="tool-row">
+        <label for="rt-size">Film size</label>
+        <select id="rt-size">
+          <option value="297x420">A3 — 297 × 420 mm</option>
+          <option value="210x297" selected>A4 — 210 × 297 mm</option>
+          <option value="216x279">Letter — 8.5 × 11 in</option>
+          <option value="279x432">Tabloid — 11 × 17 in</option>
+          <option value="custom">Custom size…</option>
+        </select>
+        <span id="rt-custom" style="display:none; align-items:center; gap:.4rem;">
+          <input type="number" id="rt-w" value="297" min="50" max="1200" style="width:4.5rem;" /> ×
+          <input type="number" id="rt-h" value="420" min="50" max="1200" style="width:4.5rem;" /> mm
+        </span>
+        <label class="chk"><input type="checkbox" id="rt-landscape" /> Landscape</label>
+      </div>
+
+      <div class="tool-row">
+        <label for="rt-style">Mark style</label>
+        <select id="rt-style">
+          <option value="circle" selected>Crosshair + circle</option>
+          <option value="cross">Plain crosshair</option>
+          <option value="star">Star (8-spoke) + circle</option>
+        </select>
+        <label for="rt-weight">Line weight</label>
+        <select id="rt-weight">
+          <option value="0.5">0.5 pt</option>
+          <option value="0.75">0.75 pt</option>
+          <option value="1" selected>1 pt</option>
+          <option value="1.25">1.25 pt</option>
+          <option value="1.5">1.5 pt</option>
+          <option value="2">2 pt</option>
+        </select>
+      </div>
+
+      <div class="tool-row">
+        <label class="chk"><input type="checkbox" id="rt-corners" checked /> Corner marks (×4)</label>
+        <label class="chk"><input type="checkbox" id="rt-crop" checked /> Center crop marks</label>
+      </div>
+
+      <div class="tool-row">
+        <label class="chk"><input type="checkbox" id="rt-grad" checked /> Gradation strip</label>
+        <label for="rt-step">Step</label>
+        <select id="rt-step">
+          <option value="10" selected>10% (10 patches)</option>
+          <option value="5">5% (20 patches)</option>
+        </select>
+        <label class="chk"><input type="checkbox" id="rt-label" checked /> Separation label</label>
+      </div>
+
+      <div class="tool-row tool-row-head">
+        <label>Custom marks</label>
+        <button id="rt-add-box" type="button" class="rt-mini">+ Artwork box</button>
+        <button id="rt-add-point" type="button" class="rt-mini">+ Single point</button>
+        <label class="chk"><input type="checkbox" id="rt-outline" checked /> Artwork outlines (dashed)</label>
+      </div>
+      <div id="rt-custom-list"></div>
+      <p class="tool-note" id="rt-custom-hint">Add one artwork box per design on the film — each box gets its own four corner marks. Use single points for any extra spot. Coordinates are in mm, measured from the film's top-left corner.</p>
+
+      <div class="tool-row">
+        <button id="rt-download" type="button">Download SVG</button>
+      </div>
+
+      <p class="tool-note">The SVG uses real millimeters — it prints at exact size. Line weight is set in points as RIP software expects. Dashed artwork outlines print too — untick them before downloading if you only want the marks on the film.</p>
+    </div>
+
+    <div class="preview-wrap">
+      <div id="rt-preview"></div>
+    </div>
+
+    <div class="prose">
+      <h2>What these marks are for</h2>
+      <p><strong>Registration marks</strong> are printed identically on every color separation. When you expose and tape up screens, you align the marks — not the artwork — because the marks are guaranteed to be in the same position on every film. Put one in each corner and any twist or stretch shows up immediately.</p>
+      <p><strong>Center crop marks</strong> (top and bottom edges) give you a quick visual center line for positioning the film on the screen.</p>
+      <p><strong>Gradation strip</strong> — a row of patches from 100% down to 10% or 5%. After exposure and washout it tells you how your film printer, emulsion and exposure time are really behaving: if the 20% patch washes away, your halftone shadows are gone too, no matter what the RIP promised.</p>
+      <p><strong>Separation label</strong> — a small text area to write the color name and screen angle. Thirty seconds of labeling saves you from exposing the wrong screen at 11 pm.</p>
+
+      <h2>Choosing line weight</h2>
+      <p>Finer marks (0.5–0.75 pt) are easier to align precisely but can break up on coarse mesh or under-exposed screens. 1 pt is the safe default for general work; go 1.5–2 pt on coarse mesh below about 30T (77 mesh/inch). If a mark clogs or vanishes on the screen, it's telling you the mesh can't hold that line — go heavier, don't fight it.</p>
+
+      <h2>Custom marks: multiple designs on one screen</h2>
+      <p>Big screens often carry more than one design — two independent graphics gang-printed on one stencil. Corner marks alone won't help you here, because each design needs to register on its own. That's what the custom marks are for.</p>
+      <p><strong>How to use them, step by step:</strong></p>
+      <ol>
+        <li>Open your artwork file (CorelDRAW, Illustrator) and note each design's position and size — the X/Y of its top-left corner and its width/height, in millimeters. The origin is the film's top-left corner, the same default both programs use, so you can copy the numbers straight across.</li>
+        <li>Click <strong>+ Artwork box</strong> once per design and type in the four numbers. The generator drops a register mark at each corner of that box, pushed outward by the <strong>offset</strong> (default 8 mm — increase it if your squeegee or frame needs more clearance).</li>
+        <li>Keep <strong>Artwork outlines</strong> ticked while you work: the dashed rectangle shows exactly where each design sits, so you can see at a glance that the marks surround the right area. Untick it before downloading if you don't want the outlines on the film — they print too.</li>
+        <li>Need a mark somewhere a box doesn't cover — a center point between two designs, a punch location? Click <strong>+ Single point</strong> and enter its exact X/Y.</li>
+        <li>Check the preview, then download. Every mark lands at true scale in the SVG, editable like any other vector.</li>
+      </ol>
+      <p>If a mark falls outside the film (a box too close to the edge), it's pulled back onto the sheet automatically — but the preview will show you the collision, so adjust the box rather than shipping a cramped mark.</p>
+
+      <h2>Working with the SVG</h2>
+      <p>The downloaded file opens directly in Illustrator, CorelDRAW and Inkscape with all elements as editable vectors. Place your artwork inside the marks, duplicate the template per color, and delete whatever your shop doesn't use. Everything prints at true scale — check once with a ruler against the gradation strip patches (5 mm squares) before trusting a new printer.</p>
+      <p>Need to sanity-check mesh specs for your films? The <a href="/tools/mesh-count-converter/">mesh count converter</a> handles mesh/inch ⇄ T-count and theoretical openings.</p>
+    </div>
+<style>
+  /* 通用 .tool/.tool-row/.tool-note 样式已移入 global.css，与 mesh-selector 共享 */
+  #rt-download { font-family: var(--sans); font-size: .9rem; letter-spacing: .06em; text-transform: uppercase; padding: .6rem 1.4rem; border: 1px solid var(--ink); background: var(--ink); color: var(--paper); cursor: pointer; }
+  #rt-download:hover { background: var(--accent); border-color: var(--accent); }
+  .preview-wrap { margin: 0 0 1.6rem; }
+  #rt-preview svg { display: block; margin: 0; border: 1px solid #b8b4ad; background: #fff; box-shadow: 0 2px 14px rgba(28,26,22,.10); }
+  .rt-mini { font-family: var(--sans); font-size: .82rem; padding: .35rem .7rem; border: 1px solid var(--ink); background: #fff; color: var(--ink); cursor: pointer; }
+  .rt-mini:hover { background: var(--ink); color: var(--paper); }
+  #rt-custom-list { margin: -.2rem 0 0; }
+  #rt-custom-hint { margin-bottom: .9rem; }
+  .rt-crow { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .5rem; font-family: var(--sans); font-size: .82rem; color: var(--ink-3); padding: .45rem .6rem; margin-bottom: .45rem; background: var(--paper, #faf8f4); border: 1px solid var(--line); }
+  .rt-crow input[type="number"] { width: 3.8rem; font-family: var(--sans); font-size: .85rem; padding: .3rem .45rem; border: 1px solid var(--line); background: #fff; color: var(--ink); }
+  .rt-crow .rt-ctag { font-weight: 600; color: var(--accent); letter-spacing: .05em; text-transform: uppercase; font-size: .72rem; margin-right: .2rem; }
+  .rt-crow .rt-del { margin-left: auto; border: none; background: none; color: var(--ink-3); font-size: 1rem; cursor: pointer; padding: 0 .3rem; line-height: 1; }
+  .rt-crow .rt-del:hover { color: var(--accent); }
+</style>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var PT = 0.3528; // pt -> mm
+
+  function dims() {
+    var w, h;
+    if ($('rt-size').value === 'custom') {
+      w = Math.min(1200, Math.max(50, +$('rt-w').value || 297));
+      h = Math.min(1200, Math.max(50, +$('rt-h').value || 420));
+    } else {
+      var v = $('rt-size').value.split('x');
+      w = +v[0]; h = +v[1];
+    }
+    if ($('rt-landscape').checked) { var t = w; w = h; h = t; }
+    return { w: w, h: h };
+  }
+
+  function mark(x, y, style, sw) {
+    var L = 4.5, r1 = 3.2, r2 = 2.1; // mm
+    var p = [];
+    function line(x1, y1, x2, y2) {
+      p.push('<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>');
+    }
+    line(x - L, y, x + L, y);
+    line(x, y - L, x, y + L);
+    if (style === 'star') {
+      var d = L * 0.72;
+      line(x - d, y - d, x + d, y + d);
+      line(x - d, y + d, x + d, y - d);
+    }
+    var circles = '';
+    if (style !== 'cross') {
+      circles = '<circle cx="' + x + '" cy="' + y + '" r="' + r1 + '"/>' +
+                '<circle cx="' + x + '" cy="' + y + '" r="' + r2 + '"/>';
+    }
+    return '<g fill="none" stroke="#000" stroke-width="' + sw + '">' + p.join('') + circles + '</g>';
+  }
+
+  // ---- 自定义标记（图案框 / 单点）----
+  var crowSeq = 0;
+
+  function addBoxRow() {
+    var el = document.createElement('div');
+    el.className = 'rt-crow'; el.dataset.kind = 'box';
+    el.innerHTML = '<span class="rt-ctag">Box</span>' +
+      'X <input type="number" class="c-x" value="40" min="0"> ' +
+      'Y <input type="number" class="c-y" value="40" min="0"> ' +
+      'W <input type="number" class="c-w" value="100" min="1"> ' +
+      'H <input type="number" class="c-h" value="80" min="1"> mm · ' +
+      'offset <input type="number" class="c-o" value="8" min="0"> mm' +
+      '<button type="button" class="rt-del" title="Remove">×</button>';
+    el.id = 'rt-crow-' + (++crowSeq);
+    $('rt-custom-list').appendChild(el);
+    render();
+  }
+
+  function addPointRow() {
+    var el = document.createElement('div');
+    el.className = 'rt-crow'; el.dataset.kind = 'point';
+    el.innerHTML = '<span class="rt-ctag">Point</span>' +
+      'X <input type="number" class="c-x" value="105" min="0"> ' +
+      'Y <input type="number" class="c-y" value="148" min="0"> mm' +
+      '<button type="button" class="rt-del" title="Remove">×</button>';
+    el.id = 'rt-crow-' + (++crowSeq);
+    $('rt-custom-list').appendChild(el);
+    render();
+  }
+
+  function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+  function num(row, cls, fallback) {
+    var el = row.querySelector('.' + cls);
+    var v = el ? +el.value : NaN;
+    return isNaN(v) ? fallback : v;
+  }
+
+  function customMarks(w, h, style, sw) {
+    var s = '';
+    var rows = $('rt-custom-list').children;
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      if (row.dataset.kind === 'box') {
+        var bx = num(row, 'c-x', 40), by = num(row, 'c-y', 40);
+        var bw = Math.max(1, num(row, 'c-w', 100)), bh = Math.max(1, num(row, 'c-h', 80));
+        var off = Math.max(0, num(row, 'c-o', 8));
+        var pts = [
+          [bx - off, by - off], [bx + bw + off, by - off],
+          [bx - off, by + bh + off], [bx + bw + off, by + bh + off]
+        ];
+        for (var j = 0; j < pts.length; j++) {
+          s += mark(clamp(pts[j][0], 0, w), clamp(pts[j][1], 0, h), style, sw);
+        }
+        if ($('rt-outline').checked) {
+          s += '<rect x="' + bx + '" y="' + by + '" width="' + bw + '" height="' + bh +
+               '" fill="none" stroke="#000" stroke-width="' + sw + '" stroke-dasharray="2 1.5"/>';
+        }
+      } else {
+        s += mark(clamp(num(row, 'c-x', 0), 0, w), clamp(num(row, 'c-y', 0), 0, h), style, sw);
+      }
+    }
+    return s;
+  }
+
+  function build() {
+    var d = dims(), w = d.w, h = d.h;
+    var sw = (+$('rt-weight').value * PT).toFixed(3);
+    var style = $('rt-style').value;
+    var m = 12; // mark inset, mm
+    var s = '';
+
+    if ($('rt-corners').checked) {
+      s += mark(m, m, style, sw) + mark(w - m, m, style, sw) +
+           mark(m, h - m, style, sw) + mark(w - m, h - m, style, sw);
+    }
+    if ($('rt-crop').checked) {
+      s += '<g stroke="#000" stroke-width="' + sw + '">' +
+        '<line x1="' + w / 2 + '" y1="3" x2="' + w / 2 + '" y2="9"/>' +
+        '<line x1="' + w / 2 + '" y1="' + (h - 9) + '" x2="' + w / 2 + '" y2="' + (h - 3) + '"/></g>';
+    }
+    if ($('rt-grad').checked) {
+      var step = +$('rt-step').value;
+      var gx = w - 9.5, gy = 20, size = 5, gap = 0.8;
+      for (var v = 100; v >= step; v -= step) {
+        s += '<rect x="' + gx + '" y="' + gy.toFixed(1) + '" width="' + size + '" height="' + size +
+             '" fill="#000" fill-opacity="' + (v / 100) + '"/>';
+        gy += size + gap;
+      }
+    }
+    if ($('rt-label').checked) {
+      s += '<text x="' + (m + 9) + '" y="' + (m + 1.5) +
+           '" font-family="Helvetica, Arial, sans-serif" font-size="3.2" fill="#000">COLOR:</text>' +
+           '<line x1="' + (m + 22) + '" y1="' + (m + 3.2) + '" x2="' + (m + 48) + '" y2="' + (m + 3.2) +
+           '" stroke="#000" stroke-width="' + sw + '"/>';
+    }
+
+    s += customMarks(w, h, style, sw);
+
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + 'mm" height="' + h + 'mm" viewBox="0 0 ' + w + ' ' + h + '">' +
+           '<rect width="' + w + '" height="' + h + '" fill="#fff"/>' + s + '</svg>';
+  }
+
+  function render() {
+    $('rt-preview').innerHTML = build();
+    // 预览始终按容器宽度铺满等比缩放（与上方工具面板严格同宽、左对齐）；
+    // 竖版大幅面会比一屏高，页面自然滚动即可。
+    // 只改预览节点的显示尺寸，不影响下载的 SVG（它始终是真实毫米）
+    var d = dims();
+    var svg = $('rt-preview').querySelector('svg');
+    var cw = $('rt-preview').clientWidth || 600;
+    var scale = cw / d.w;
+    svg.style.width = (d.w * scale) + 'px';
+    svg.style.height = (d.h * scale) + 'px';
+  }
+  window.addEventListener('resize', render);
+
+  $('rt-download').addEventListener('click', function () {
+    var svg = build();
+    var blob = new Blob([svg], { type: 'image/svg+xml' });
+    var a = document.createElement('a');
+    var d = dims();
+    a.href = URL.createObjectURL(blob);
+    a.download = 'registration-template-' + d.w + 'x' + d.h + 'mm.svg';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  $('rt-size').addEventListener('input', function () {
+    $('rt-custom').style.display = ($('rt-size').value === 'custom') ? 'inline-flex' : 'none';
+  });
+
+  var ids = ['rt-size', 'rt-landscape', 'rt-style', 'rt-weight', 'rt-corners', 'rt-crop', 'rt-grad', 'rt-step', 'rt-label', 'rt-w', 'rt-h', 'rt-outline'];
+  ids.forEach(function (id) { $(id).addEventListener('input', render); });
+
+  $('rt-add-box').addEventListener('click', addBoxRow);
+  $('rt-add-point').addEventListener('click', addPointRow);
+  // 事件委托：自定义行的输入与删除都在列表容器上统一处理
+  $('rt-custom-list').addEventListener('input', render);
+  $('rt-custom-list').addEventListener('click', function (e) {
+    var btn = e.target.closest('.rt-del');
+    if (btn) { btn.closest('.rt-crow').remove(); render(); }
+  });
+
+  render();
+})();
+</script>
+<footer><p>Free, offline, single-file — from <a href="https://screenprintfoundry.com/tools/registration-mark-generator/">ScreenPrint Foundry</a>. Data never leaves your computer.</p></footer>
+</div>
+</body>
+</html>
