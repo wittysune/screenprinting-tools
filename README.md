@@ -16,7 +16,24 @@ Each tool is **one .html file**: no server, no account, no installation. Open it
 
 ## The tools
 
-### 1 · Exposure Time Calculator
+### 1 · Screen Inventory Manager
+
+![Screen Inventory Manager](assets/screen-inventory-manager.png)
+
+For shops that *buy* their screens: know where every screen is, what job it carries, and whether its tension is still above your floor.
+
+- **Excel import with column mapping** — paste your sheet as-is, map your columns once, preview, import; duplicate IDs skipped, your own status names become custom statuses
+- **Free-format screen IDs** — your numbering scheme, not the tool's; the ID becomes the barcode and the search key
+- **Tension logging at every changeover** — 5-point (center + four corners) with live average, or 1-pt mode; per-screen decay curve with a red line at your threshold
+- **Printable frame labels** — pick fields, exact mm size, Code 128 barcode auto-sized to fit; prints to any label printer
+- **Scan-gun lookup** — a cheap USB/2.4G barcode scanner is just a keyboard: scan a frame from any screen and its record opens
+- **Custom statuses** — rename / add / delete, with delete-protection for statuses in use; JSON backup & restore
+
+[▶ Run it](https://wittysune.github.io/screenprinting-tools/tools/screen-inventory-manager.html) · [Full walkthrough](https://screenprintfoundry.com/process/screen-inventory-manager-guide/)
+
+---
+
+### 2 · Exposure Time Calculator
 
 ![Exposure Time Calculator](assets/01-step-result.png)
 
@@ -29,7 +46,7 @@ Read your step-wedge or factor-filter exposure test, get the corrected time — 
 
 [▶ Run it](https://wittysune.github.io/screenprinting-tools/tools/exposure-time-calculator.html) · [Full walkthrough](https://screenprintfoundry.com/process/exposure-calculator-guide/) · [Step-wedge background guide](https://screenprintfoundry.com/process/find-your-exposure-time/)
 
-### 2 · Print QC Logger
+### 3 · Print QC Logger
 
 ![Print QC Logger](assets/qc-logger.png)
 
@@ -41,7 +58,7 @@ A browser-based inspection station for the end of your production line.
 
 [▶ Run it](https://wittysune.github.io/screenprinting-tools/tools/print-qc-logger.html) · [About this tool](https://screenprintfoundry.com/tools/qc-logger/)
 
-### 3 · Ink Recipe Manager
+### 4 · Ink Recipe Manager
 
 ![Ink Recipe Manager](assets/ink-recipe-manager.png)
 
@@ -54,7 +71,7 @@ A local database for your ink formulas.
 
 [▶ Run it](https://wittysune.github.io/screenprinting-tools/tools/ink-recipe-manager.html) · [About this tool](https://screenprintfoundry.com/tools/ink-recipe-manager/)
 
-### 4 · 3-Axis Registration Adjustment Simulator
+### 5 · 3-Axis Registration Adjustment Simulator
 
 ![3-Axis Registration Simulator](assets/registration-simulator.png)
 
@@ -66,7 +83,7 @@ A training simulator for three-axis presses (X / Y1 / Y2).
 
 [▶ Run it](https://wittysune.github.io/screenprinting-tools/tools/registration-simulator.html) · [Full guide with lesson walkthroughs](https://screenprintfoundry.com/tools/registration-simulator/)
 
-### 5 · Registration Mark Generator
+### 6 · Registration Mark Generator
 
 ![Registration Mark Generator](assets/registration-mark-generator.png)
 
